@@ -5,6 +5,13 @@
 Morse code encoder and decoder with no dependencies supports Latin, Cyrilic, Greek, Hebrew, 
 Arabic, Persian, Japanese, and Korean characters with audio generation functionality.
 
+## Install
+```bash
+$ npm install morsify --save
+```
+
+## Usage
+
 ```js
 var morsify = require('morsify');
 
