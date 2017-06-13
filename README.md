@@ -1,9 +1,16 @@
 # morsify
 
-[![npm-version]][npm] [![travis-ci]][travis] [![coveralls-status]][coveralls]
+[![npm-version]][npm] [![npm-downloads]][npm] [![travis-ci]][travis]
 
 Morse code encoder and decoder with no dependencies supports Latin, Cyrilic, Greek, Hebrew, 
 Arabic, Persian, Japanese, and Korean characters with audio generation functionality.
+
+## Install
+```bash
+$ npm install morsify --save
+```
+
+## Usage
 
 ```js
 var morsify = require('morsify');
@@ -47,10 +54,9 @@ morsify.audio('البُراق‎‎', { // generates the morse .-/.-../-.../.-./
 })
 ```
 
-  [npm-version]: https://img.shields.io/npm/v/morsify.svg?style=flat-square (NPM Package Version)
-  [travis-ci]: https://img.shields.io/travis/simov/morsify/master.svg?style=flat-square (Build Status - Travis CI)
-  [coveralls-status]: https://img.shields.io/coveralls/simov/morsify.svg?style=flat-square (Test Coverage - Coveralls)
+  [npm-version]: https://img.shields.io/npm/v/morsify.svg?style=flat-square
+  [npm-downloads]: https://img.shields.io/npm/dm/morsify.svg?style=flat-square
+  [travis-ci]: https://img.shields.io/travis/ozdemirburak/morsify/master.svg?style=flat-square
 
   [npm]: https://www.npmjs.com/package/morsify
-  [travis]: https://travis-ci.org/simov/morsify
-  [coveralls]: https://coveralls.io/r/simov/morsify?branch=master
+  [travis]: https://travis-ci.org/ozdemirburak/morsify
