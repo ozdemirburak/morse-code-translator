@@ -1,0 +1,39 @@
+{
+  "name": "morsify",
+  "version": "0.1.0",
+  "description": "Encodes and decodes morse code, creates morse code audio from text.",
+  "keywords": [
+    "morse",
+    "morse code",
+    "morse alphabet",
+    "morse audio",
+    "morsify"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/ozdemirburak/morsify",
+  "author": "Burak Özdemir <mail@burakozdemir.co.uk> (https://burakozdemir.co.uk)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ozdemirburak/morsify.git"
+  },
+  "devDependencies": {
+    "coveralls": "^2.13.0",
+    "jshint": "^2.9.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.4.0"
+  },
+  "main": "./index.js",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js"
+  ],
+  "scripts": {
+    "test": "npm run lint && mocha",
+    "test-cov": "istanbul cover _mocha",
+    "lint": "jshint index.js"
+  },
+  "engines": {
+    "node": ">=4.0.0"
+  }
+}
