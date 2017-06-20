@@ -158,8 +158,4 @@ describe('morsify', function () {
     t.equal(morsify.decode('---/.---/./../-/...', options), 'ㅍ ㅎ ㅏ ㅑ ㅓ ㅕ');
     t.equal(morsify.decode('.-/-./..../.-./-../..-', options), 'ㅗ ㅛ ㅜ ㅠ ㅡ ㅣ');
   });
-  it('creates audio', function () {
-    t.equal('data:audio/wav;base64', morsify.audio('SOS').substr(0, 21));
-    t.equal('UklGRsK8IAAAV0FWRWZtdCAQAAAAAQABAMO0AwAAw6gHAAACABAAZGF0YcKIIAAAAADDvjJ1wqLCm3hOwoDCpXE6wq/CiCJtEX/CvcKRaMKvwoJRfW/Cl8KBQsKTw654w53DhlBbwo7Csn9lwofCi10Cw40AAMO+MnXCosKbeE7CgMKlcTrCr8KIIm0Rf8K9wpFowq/CglF9b8KXwoFCwpPDrnjDncOGUFvCjsKyf2XCh8KLXQLDjQAAw74ydcKiwpt4TsKAwqVxOsKvwogibRF/wr3CkWjCr8KCUX1vwpfCgULCk8OueMOdw4ZQW8KOwrJ/ZcKHwotdAsONAADDvjJ1wqLCm3hOwoDCpXE6wq/CiCJtEX/CvcKRaMKvwoJRfW/Cl8KBQsKTw654w53DhlBbwo7Csn9lwofCi10Cw40AAMO+MnXCosKbeE7CgMKlcTrCr8KIIm0Rf8K', morsify.audio('SOS').substr(22, 463));
-  });
 });
