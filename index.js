@@ -36,7 +36,7 @@
       'Ș': '1111', 'Š': '1111', 'Ŝ': '00010', 'ß': '000000', 'Þ': '01100', 'Ü': '0011',
       'Ù': '0011', 'Ŭ': '0011', 'Ž': '11001', 'Ź': '110010', 'Ż': '11001'
     },
-    '5': { // Cyrilic Alphabet => https://en.wikipedia.org/wiki/Russian_Morse_code
+    '5': { // Cyrillic Alphabet => https://en.wikipedia.org/wiki/Russian_Morse_code
       'А': '01', 'Б': '1000', 'В': '011', 'Г': '110', 'Д': '100', 'Е': '0',
       'Ж': '0001', 'З': '1100', 'И': '00', 'Й': '0111', 'К': '101','Л': '0100',
       'М': '11', 'Н': '10', 'О': '111', 'П': '0110', 'Р': '010', 'С': '000',
@@ -105,18 +105,19 @@
 
   var getOptions = function (options) {
     options = options || {};
+    options.oscillator = options.oscillator || {};
     options = {
       dash: options.dash || '-',
       dot: options.dot || '.',
       space: options.space || '/',
       invalid: options.invalid || '#',
       priority: options.priority || 1,
-      channels: options.channels || 1,
-      sampleRate: options.sampleRate || 1012,
-      bitDepth: options.bitDepth || 16,
-      unit: options.unit || 0.1,
-      frequency: options.frequency || 440.0,
-      volume: options.volume || 32767
+      unit: options.unit || 0.08, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
+      oscillator: {
+        type: options.oscillator.type || 'sine', // sine, square, sawtooth, triangle
+        frequency: options.oscillator.frequency || 500,  // value in hertz
+        onended: options.oscillator.onended || null,  // event that fires when the tone has stopped playing
+      }
     };
     characters[0] = characters[options.priority];
     return options;
@@ -141,29 +142,24 @@
     }).join(' ').replace(/\s+/g, ' ');
   };
 
-  // Source: https://github.com/mattt/Morse.js
   var audio = function (text, opts) {
-    var options = getOptions(opts), morse = encode(text, opts), data = [], samples = 0,
-      pack = function (e) {
-        for (var b = '', c = 1, d = 0; d < e.length; d++) {
-          var f = e.charAt(d), a = arguments[c++];
-          b += f === 'v' ? String.fromCharCode(a & 255, a >> 8 & 255) : String.fromCharCode(a & 255, a >> 8 & 255, a >> 16 & 255, a >> 24 & 255);
-        }
-        return b;
-      }, tone = function (length) {
-        for (var i = 0; i < options.sampleRate * options.unit * length; i++) {
-          for (var c = 0; c < options.channels; c++) {
-            var v = options.volume * Math.sin((2 * Math.PI) * (i / options.sampleRate) * options.frequency);
-            data.push(pack('v', v)); samples++;
-          }
-        }
-      }, silence = function (length) {
-        for (var i = 0; i < options.sampleRate * options.unit * length; i++) {
-          for (var c = 0; c < options.channels; c++) {
-            data.push(pack('v', 0)); samples++;
-          }
-        }
-      };
+    var options = getOptions(opts), morse = encode(text, opts),
+      AudioContext = window.AudioContext || window.webkitAudioContext, ctx = new AudioContext(),
+      t = ctx.currentTime, oscillator = ctx.createOscillator(), gainNode = ctx.createGain();
+
+    oscillator.type = options.oscillator.type;
+    oscillator.frequency.value = options.oscillator.frequency;
+    oscillator.onended = options.oscillator.onended;
+
+    gainNode.gain.setValueAtTime(0, t);
+
+    var tone = function (i) {
+      gainNode.gain.setValueAtTime(1, t);
+      t += i * options.unit;
+    }, silence = function (i) {
+      gainNode.gain.setValueAtTime(0, t);
+      t += i * options.unit;
+    };
 
     for (var i = 0; i <= morse.length; i++) {
       if (morse[i] === options.space) {
@@ -179,34 +175,19 @@
       }
     }
 
-    var chunk1 = [
-        'fmt ',
-        pack('V', 16),
-        pack('v', 1),
-        pack('v', options.channels),
-        pack('V', options.sampleRate),
-        pack('V', options.sampleRate * options.channels * options.bitDepth / 8),
-        pack('v', options.channels * options.bitDepth / 8),
-        pack('v', options.bitDepth)
-      ].join(''),
-      chunk2 = [
-        'data',
-        pack('V', samples * options.channels * options.bitDepth / 8),
-        data.join('')
-      ].join(''),
-      header = [
-        'RIFF',
-        pack('V', 4 + (8 + chunk1.length) + (8 + chunk2.length)),
-        'WAVE'
-      ].join('');
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
 
-    if (typeof btoa === 'undefined') {
-      global.btoa = function (str) {
-        return new Buffer(str).toString('base64');
-      };
-    }
-
-    return 'data:audio/wav;base64,' + encodeURI(btoa([header, chunk1, chunk2].join('')));
+    return {
+      play: function () {
+        oscillator.start();
+        oscillator.stop(t);
+      },
+      stop: function () {
+        oscillator.stop();
+      },
+      oscillator: oscillator
+    };
   };
 
   return {
