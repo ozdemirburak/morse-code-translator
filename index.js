@@ -186,6 +186,7 @@
       stop: function () {
         oscillator.stop();
       },
+      context: ctx,
       oscillator: oscillator
     };
   };

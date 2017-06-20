@@ -1,6 +1,6 @@
 {
   "name": "morsify",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Encodes and decodes morse code, creates morse code audio from text.",
   "keywords": [
     "morse",

@@ -23,7 +23,6 @@ $ yarn add morsify
 
 ```js
 var morsify = require('morsify');
-
 var encoded = morsify.encode('SOS'); // .../---/... 
 var decoded = morsify.decode('.../---/...'); // S O S
 var audio = morsify.audio('SOS'), oscillator = audio.oscillator; // OscillatorNode
@@ -38,7 +37,9 @@ Or alternatively, you can also use the library directly with including the sourc
 <script>
     var encoded = morsify.encode('SOS'); // .../---/... 
     var decoded = morsify.decode('.../---/...'); // S O S
-    var audio = morsify.audio('SOS'), oscillator = audio.oscillator; // OscillatorNode
+    var audio = morsify.audio('SOS');
+    var oscillator = audio.oscillator; // OscillatorNode
+    var context = audio.context; // AudioContext
     audio.play(); // play audio
     audio.stop(); // stop audio
 </script>
@@ -78,7 +79,9 @@ var arabicAudio = morsify.audio('البُراق‎‎', { // generates the morse
       console.log('ended');
     },
   }
-}), oscillator = arabicAudio.oscillator; // OscillatorNode
+}); 
+var oscillator = arabicAudio.oscillator; // OscillatorNode 
+var context = arabicAudio.context; // AudioContext; 
 arabicAudio.play(); // will start playing morse audio
 arabicAudio.stop(); // will stop playing morse audio
 ```
