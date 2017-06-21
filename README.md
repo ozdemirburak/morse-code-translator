@@ -5,6 +5,8 @@
 Morse code encoder and decoder with no dependencies supports Latin, Cyrillic, Greek, Hebrew, 
 Arabic, Persian, Japanese, and Korean characters with audio generation functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API). 
 
+Live demo can be found at [morsify.net](https://morsify.net).
+
 ## Installation
 
 ### npm
@@ -33,7 +35,7 @@ audio.stop(); // stop audio
 Or alternatively, you can also use the library directly with including the source file.
 
 ```html
-<script src="https://rawgit.com/ozdemirburak/morsify/master/index.js"></script>
+<script src="https://rawgit.com/ozdemirburak/morsify/master/dist/morsify.min.js"></script>
 <script>
     var encoded = morsify.encode('SOS'); // .../---/... 
     var decoded = morsify.decode('.../---/...'); // S O S

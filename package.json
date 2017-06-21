@@ -1,12 +1,13 @@
 {
   "name": "morsify",
-  "version": "0.2.1",
-  "description": "Encodes and decodes morse code, creates morse code audio from text.",
+  "version": "0.2.2",
+  "description": "Morse code translator and decoder which also generates audio.",
   "keywords": [
     "morse",
     "morse code",
     "morse alphabet",
     "morse audio",
+    "morse translator",
     "morsify"
   ],
   "license": "MIT",
@@ -18,9 +19,13 @@
   },
   "devDependencies": {
     "coveralls": "^2.13.0",
-    "jshint": "^2.9.0",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-uglify": "^3.0.0",
     "istanbul": "^0.4.5",
-    "mocha": "^3.4.0"
+    "jshint": "^2.9.0",
+    "mocha": "^3.4.0",
+    "pump": "^1.0.2"
   },
   "main": "./index.js",
   "files": [
