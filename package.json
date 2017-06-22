@@ -1,6 +1,6 @@
 {
   "name": "morsify",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Morse code translator and decoder which also generates audio.",
   "keywords": [
     "morse",
@@ -8,6 +8,8 @@
     "morse alphabet",
     "morse audio",
     "morse translator",
+    "morse decoder",
+    "morse encoder",
     "morsify"
   ],
   "license": "MIT",
@@ -27,17 +29,17 @@
     "mocha": "^3.4.0",
     "pump": "^1.0.2"
   },
-  "main": "./index.js",
+  "main": "./src/morsify.js",
   "files": [
     "LICENSE",
     "README.md",
-    "index.js",
-    "dist/morsify.min.js"
+    "src",
+    "dist"
   ],
   "scripts": {
     "test": "npm run lint && mocha",
     "test-cov": "istanbul cover _mocha",
-    "lint": "jshint index.js"
+    "lint": "jshint ./src/morsify.js"
   },
   "engines": {
     "node": ">=4.0.0"
