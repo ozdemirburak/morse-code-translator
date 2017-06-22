@@ -1,5 +1,5 @@
 var t = require('assert');
-var morsify = require('../index');
+var morsify = require('../src/morsify');
 
 describe('morsify', function () {
   it('encodes english alphabet', function () {

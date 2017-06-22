@@ -2,7 +2,7 @@ var gulp = require('gulp'), concat = require('gulp-concat'), uglify = require('g
 
 gulp.task('minify-js', function (cb) {
   pump([
-      gulp.src('index.js'),
+      gulp.src('./src/morsify.js'),
       concat('morsify.min.js'),
       uglify(),
       gulp.dest('dist')
