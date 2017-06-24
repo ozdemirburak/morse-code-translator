@@ -27,6 +27,7 @@ $ yarn add morsify
 var morsify = require('morsify');
 var encoded = morsify.encode('SOS'); // .../---/... 
 var decoded = morsify.decode('.../---/...'); // S O S
+var characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
 var audio = morsify.audio('SOS'), oscillator = audio.oscillator; // OscillatorNode
 audio.play(); // play audio
 audio.stop(); // stop audio
@@ -39,6 +40,7 @@ Or alternatively, you can also use the library directly with including the sourc
 <script>
     var encoded = morsify.encode('SOS'); // .../---/... 
     var decoded = morsify.decode('.../---/...'); // S O S
+    var characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
     var audio = morsify.audio('SOS');
     var oscillator = audio.oscillator; // OscillatorNode
     var context = audio.context; // AudioContext
@@ -72,6 +74,7 @@ Set the priority option according to the list below.
 var cyrillic = morsify.encode('Ленинград', { priority: 5 }) // .-.././-./../-./--./.-./.-/-..
 var greek = morsify.decode('.../.-/--./.-/.--./.--', { priority: 6 }) // Σ Α Γ Α Π Ω
 var hebrew = morsify.decode('––– –... ––– –. ––. .. .–.. –––', { dash: '–', dot: '.', space: ' ', priority: 7 }) // ה ב ה נ ג י ל ה
+var characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
 var arabicAudio = morsify.audio('البُراق‎‎', { // generates the morse .-/.-../-.../.-./.-/--.- then generates the audio from it
   unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
   oscillator: {
