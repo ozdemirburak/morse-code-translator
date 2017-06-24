@@ -1,15 +1,16 @@
 {
   "name": "morsify",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "Morse code translator and decoder which also generates audio.",
   "keywords": [
     "morse",
-    "morse code",
     "morse alphabet",
     "morse audio",
-    "morse translator",
+    "morse characters",
+    "morse code",
     "morse decoder",
     "morse encoder",
+    "morse translator",
     "morsify"
   ],
   "license": "MIT",

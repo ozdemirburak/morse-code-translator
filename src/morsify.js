@@ -90,13 +90,26 @@
     }
   };
 
-  var swapCharacters = function (options) {
-    var swapped = {};
+  var getCharacters = function (opts, usePriority) {
+    var options = getOptions(opts), mapped = {};
     for (var set in characters) {
+      mapped[set] = {};
       for (var key in characters[set]) {
-        var mapped = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
-        if (typeof swapped[mapped] === 'undefined') {
-          swapped[mapped] = key;
+        mapped[set][key] = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
+      }
+    }
+    if (usePriority !== true) {
+      delete mapped[0];
+    }
+    return mapped;
+  };
+
+  var swapCharacters = function (options) {
+    var swapped = {}, mappedCharacters = getCharacters(options, true);
+    for (var set in mappedCharacters) {
+      for (var key in mappedCharacters[set]) {
+        if (typeof swapped[mappedCharacters[set][key]] === 'undefined') {
+          swapped[mappedCharacters[set][key]] = key;
         }
       }
     }
@@ -192,6 +205,7 @@
   };
 
   return {
+    characters: getCharacters,
     decode: decode,
     encode: encode,
     audio: audio
