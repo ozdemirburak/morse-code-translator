@@ -3,7 +3,7 @@
 [![npm-version]][npm] [![npm-downloads]][npm] [![travis-ci]][travis]
 
 Morse code encoder and decoder with no dependencies supports Latin, Cyrillic, Greek, Hebrew, 
-Arabic, Persian, Japanese, and Korean characters with audio generation functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API). 
+Arabic, Persian, Japanese, Korean, and Thai characters with audio generation functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API). 
 
 Live demo can be found at [morsify.net](https://morsify.net).
 
@@ -97,8 +97,7 @@ arabicAudio.stop(); // will stop playing morse audio
 Contributions are welcome. 
 
 Currently, as a major drawback, Chinese characters are missing. Someone with the knowledge of 
-[Chinese telegraph code](https://en.wikipedia.org/wiki/Chinese_telegraph_code) can help to implement it. Also someone who is proficient in Thai can help
-to include [Thai alphabet](https://th.wikipedia.org/wiki/รหัสมอร์ส).
+[Chinese telegraph code](https://en.wikipedia.org/wiki/Chinese_telegraph_code) can help to implement it.
 
 ## Generating Minified Files
 
