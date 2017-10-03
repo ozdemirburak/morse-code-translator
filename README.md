@@ -100,6 +100,17 @@ Currently, as a major drawback, Chinese characters are missing. Someone with the
 [Chinese telegraph code](https://en.wikipedia.org/wiki/Chinese_telegraph_code) can help to implement it. Also someone who is proficient in Thai can help
 to include [Thai alphabet](https://th.wikipedia.org/wiki/รหัสมอร์ส).
 
+## Generating Minified Files
+
+Install node and npm following one of the techniques explained within 
+this [link](https://gist.github.com/isaacs/579814) and run the commands below.
+
+``` bash
+$ npm install --global gulp-cli
+$ npm install
+$ gulp
+```
+
 ## License
 The MIT License (MIT). Please see [License File](LICENSE) for more information.
 

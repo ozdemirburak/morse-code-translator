@@ -159,7 +159,7 @@ describe('morsify', function () {
     t.equal(morsify.decode('.-/-./..../.-./-../..-', options), 'ㅗ ㅛ ㅜ ㅠ ㅡ ㅣ');
   });
   it('encodes thai alphabet', function () {
-    var options = { priority: 11 };
+    var options = { priority: 12 };
     t.equal(morsify.encode('กขคง', options), '--./-.-./-.-/-.--.');
     t.equal(morsify.encode('จฉชซญด', options), '-..-./----/-..-/--../.---/-..');
     t.equal(morsify.encode('ตถทนบ', options), '-/-.-../-..--/-./-...');
