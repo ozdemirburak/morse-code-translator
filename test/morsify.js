@@ -158,6 +158,60 @@ describe('morsify', function () {
     t.equal(morsify.decode('---/.---/./../-/...', options), 'ㅍ ㅎ ㅏ ㅑ ㅓ ㅕ');
     t.equal(morsify.decode('.-/-./..../.-./-../..-', options), 'ㅗ ㅛ ㅜ ㅠ ㅡ ㅣ');
   });
+  it('encodes thai alphabet', function () {
+    var options = { priority: 11 };
+    t.equal(morsify.encode('กขคง', options), '--./-.-./-.-/-.--.');
+    t.equal(morsify.encode('จฉชซญด', options), '-..-./----/-..-/--../.---/-..');
+    t.equal(morsify.encode('ตถทนบ', options), '-/-.-../-..--/-./-...');
+    t.equal(morsify.encode('ปผฝพฟ', options), '.--./--.-/-.-.-/.--../..-.');
+    t.equal(morsify.encode('มยรลว', options), '--/-.--/.-./.-../.--');
+    t.equal(morsify.encode('สหอฮฤ', options), '.../..../-...-/--.--/.-.--');
+    t.equal(morsify.encode('ะาิีึืุูเแไโำ', options), '.-.../.-/..-../../..--./..--/..-.-/---././.-.-/.-..-/---/...-.');
+    t.equal(morsify.encode('่้๊๋', options), '..-/...-/--.../.-.-.');
+    t.equal(morsify.encode('ั็์ๆฯ', options), '.--.-/---../--..-/-.---/--.-.');
+
+    /* full test
+    ** this test can be used after figure out how to deal with Thai alphabeth duplications and conflicts
+
+    t.equal(morsify.encode('กขฃคฅฆง', options), '--./-.-./-.-./-.-/-.-/-.-/-.--.');
+    t.equal(morsify.encode('จฉชซญดฎ', options), '-..-./----/-..-/--../.---/-../-..');
+    t.equal(morsify.encode('ตฏถฐทธฑฒนณบ', options), '-/-/-.-../-.-../-..--/-..--/-..--/-..--/-./-./-...');
+    t.equal(morsify.encode('ปผฝพภฟ', options), '.--./--.-/-.-.-/.--../.--../..-.');
+    t.equal(morsify.encode('มยรลฬว', options), '--/-.--/.-./.-../.-../.--');
+    t.equal(morsify.encode('ศษสหอฮฤฤๅ', options), '.../.../.../..../-...-/--.--/.-.--/.-.--');
+    t.equal(morsify.encode('ะาิีึืุูเแไใโำ', options), '.-.../.-/..-../../..--./..--/..-.-/---././.-.-/.-..-/.-..-/---/...-.');
+    t.equal(morsify.encode('่้๊๋', options), '..-/...-/--.../.-.-.');
+    t.equal(morsify.encode('ั็์ๆฯฯลฯ', options), '.--.-/---../--..-/-.---/--.-./---.-');
+
+    */
+  });
+  it('decodes thai alphabet', function () {
+    var options = { priority: 12 };
+    t.equal(morsify.decode('--./-.-./-.-/-.--.', options), 'ก ข ค ง');
+    t.equal(morsify.decode('-..-./----/-..-/--../.---/-..', options), 'จ ฉ ช ซ ญ ด');
+    t.equal(morsify.decode('-/-.-../-..--/-./-...', options), 'ต ถ ท น บ');
+    t.equal(morsify.decode('.--./--.-/-.-.-/.--../..-.', options), 'ป ผ ฝ พ ฟ');
+    t.equal(morsify.decode('--/-.--/.-./.-../.--', options), 'ม ย ร ล ว');
+    t.equal(morsify.decode('.../..../-...-/--.--/.-.--', options), 'ส ห อ ฮ ฤ');
+    t.equal(morsify.decode('.-.../.-/..-../../..--./..--/..-.-/---././.-.-/.-..-/---/...-.', options), 'ะ า ิ ี ึ ื ุ ู เ แ ไ โ ำ');
+    t.equal(morsify.decode('..-/...-/--.../.-.-.', options), '่ ้ ๊ ๋');
+    t.equal(morsify.decode('.--.-/---../--..-/-.---/--.-.', options), 'ั ็ ์ ๆ ฯ');
+
+    /* full test
+    ** this test can be used after figure out how to deal with Thai alphabeth duplications and conflicts
+
+    t.equal(morsify.decode('--./-.-./-.-./-.-/-.-/-.-/-.--.', options), 'ก ข ฃ ค ฅ ฆ ง');
+    t.equal(morsify.decode('-..-./----/-..-/--../.---/-../-..', options), 'จ ฉ ช ซ ญ ด ฎ');
+    t.equal(morsify.decode('-/-/-.-../-.-../-..--/-..--/-..--/-..--/-./-./-...', options), 'ต ฏ ถ ฐ ท ธ ฑ ฒ น ณ บ');
+    t.equal(morsify.decode('.--./--.-/-.-.-/.--../..-.', options), 'ป ผ ฝ พ ภ ฟ');
+    t.equal(morsify.decode('--/-.--/.-./.-../.-../.--', options), 'ม ย ร ล ฬ ว');
+    t.equal(morsify.decode('.../.../.../..../-...-/--.--/.-.--', options), 'ศ ษ ส ห อ ฮ ฤ ฤๅ');
+    t.equal(morsify.decode('.-.../.-/..-../../..--./..--/..-.-/---././.-.-/.-..-/.-..-/---/...-.', options), 'ะ า ิ ี ึ ื ุ ู เ แ ไ ใ โ ำ');
+    t.equal(morsify.decode('..-/...-/--.../.-.-.', options), '่ ้ ๊ ๋');
+    t.equal(morsify.decode('.--.-/---../--..-/-.---/--.-./---.-', options), 'ั ็ ์ ๆ ฯ ฯลฯ');
+
+    */
+  });
   it('returns mapped characters', function () {
     var characters = morsify.characters();
     t.equal(characters[1]['A'], '.-');
@@ -171,6 +225,7 @@ describe('morsify', function () {
     t.equal(characters[9]['ا'], '.-');
     t.equal(characters[10]['ア'], '--.--');
     t.equal(characters[11]['ㄱ'], '.-..');
+    t.equal(characters[12]['ก'], '--.');
     characters = morsify.characters({ dash: '–', dot: '•', space: ' ' });
     t.equal(characters[1]['A'], '•–');
     t.equal(characters[2]['0'], '–––––');
@@ -183,5 +238,7 @@ describe('morsify', function () {
     t.equal(characters[9]['ا'], '•–');
     t.equal(characters[10]['ア'], '––•––');
     t.equal(characters[11]['ㄱ'], '•–••');
+    t.equal(characters[12]['ก'], '––•');
   });
+
 });

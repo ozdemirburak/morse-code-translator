@@ -69,6 +69,7 @@ Set the priority option according to the list below.
 - 9 => Persian
 - 10 => Japanese
 - 11 => Korean
+- 12 => Thai
 
 ```js
 var cyrillic = morsify.encode('Ленинград', { priority: 5 }) // .-.././-./../-./--./.-./.-/-..
