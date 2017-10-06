@@ -3,7 +3,7 @@
 [![npm-version]][npm] [![npm-downloads]][npm] [![travis-ci]][travis]
 
 Morse code encoder and decoder with no dependencies supports Latin, Cyrillic, Greek, Hebrew, 
-Arabic, Persian, Japanese, Korean, and Thai characters with audio generation functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API). 
+Arabic, Persian, Japanese, Korean, Thai, and Unicode (Chinese and the others) characters with audio generation functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API). 
 
 Live demo can be found at [morsify.net](https://morsify.net).
 
@@ -70,11 +70,13 @@ Set the priority option according to the list below.
 - 10 => Japanese
 - 11 => Korean
 - 12 => Thai
+- 13 => Unicode (Chinese and the others)
 
 ```js
-var cyrillic = morsify.encode('Ленинград', { priority: 5 }) // .-.././-./../-./--./.-./.-/-..
-var greek = morsify.decode('.../.-/--./.-/.--./.--', { priority: 6 }) // Σ Α Γ Α Π Ω
-var hebrew = morsify.decode('––– –... ––– –. ––. .. .–.. –––', { dash: '–', dot: '.', space: ' ', priority: 7 }) // ה ב ה נ ג י ל ה
+var cyrillic = morsify.encode('Ленинград', { priority: 5 }); // .-.././-./../-./--./.-./.-/-..
+var greek = morsify.decode('.../.-/--./.-/.--./.--', { priority: 6 }); // Σ Α Γ Α Π Ω
+var hebrew = morsify.decode('––– –... ––– –. ––. .. .–.. –––', { dash: '–', dot: '.', space: ' ', priority: 7 }); // ה ב ה נ ג י ל ה
+var chinese = morsify.encode('你好', { priority: 13 }); // -..----.--...../-.--..-.-----.-
 var characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
 var arabicAudio = morsify.audio('البُراق‎‎', { // generates the morse .-/.-../-.../.-./.-/--.- then generates the audio from it
   unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
@@ -95,9 +97,6 @@ arabicAudio.stop(); // will stop playing morse audio
 ## Contributing and Known Issues
 
 Contributions are welcome. 
-
-Currently, as a major drawback, Chinese characters are missing. Someone with the knowledge of 
-[Chinese telegraph code](https://en.wikipedia.org/wiki/Chinese_telegraph_code) can help to implement it.
 
 ## Generating Minified Files
 
