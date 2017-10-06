@@ -169,10 +169,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('ะาิีึืุูเแไโำ', options), '.-.../.-/..-../../..--./..--/..-.-/---././.-.-/.-..-/---/...-.');
     t.equal(morsify.encode('่้๊๋', options), '..-/...-/--.../.-.-.');
     t.equal(morsify.encode('ั็์ๆฯ', options), '.--.-/---../--..-/-.---/--.-.');
-
-    /* full test
-    ** this test can be used after figure out how to deal with Thai alphabeth duplications and conflicts
-
+    /* this test can be used after figure out how to deal with Thai alphabet duplications and conflicts
     t.equal(morsify.encode('กขฃคฅฆง', options), '--./-.-./-.-./-.-/-.-/-.-/-.--.');
     t.equal(morsify.encode('จฉชซญดฎ', options), '-..-./----/-..-/--../.---/-../-..');
     t.equal(morsify.encode('ตฏถฐทธฑฒนณบ', options), '-/-/-.-../-.-../-..--/-..--/-..--/-..--/-./-./-...');
@@ -182,7 +179,6 @@ describe('morsify', function () {
     t.equal(morsify.encode('ะาิีึืุูเแไใโำ', options), '.-.../.-/..-../../..--./..--/..-.-/---././.-.-/.-..-/.-..-/---/...-.');
     t.equal(morsify.encode('่้๊๋', options), '..-/...-/--.../.-.-.');
     t.equal(morsify.encode('ั็์ๆฯฯลฯ', options), '.--.-/---../--..-/-.---/--.-./---.-');
-
     */
   });
   it('decodes thai alphabet', function () {
@@ -196,10 +192,7 @@ describe('morsify', function () {
     t.equal(morsify.decode('.-.../.-/..-../../..--./..--/..-.-/---././.-.-/.-..-/---/...-.', options), 'ะ า ิ ี ึ ื ุ ู เ แ ไ โ ำ');
     t.equal(morsify.decode('..-/...-/--.../.-.-.', options), '่ ้ ๊ ๋');
     t.equal(morsify.decode('.--.-/---../--..-/-.---/--.-.', options), 'ั ็ ์ ๆ ฯ');
-
-    /* full test
-    ** this test can be used after figure out how to deal with Thai alphabeth duplications and conflicts
-
+    /* this test can be used after figure out how to deal with Thai alphabet duplications and conflicts
     t.equal(morsify.decode('--./-.-./-.-./-.-/-.-/-.-/-.--.', options), 'ก ข ฃ ค ฅ ฆ ง');
     t.equal(morsify.decode('-..-./----/-..-/--../.---/-../-..', options), 'จ ฉ ช ซ ญ ด ฎ');
     t.equal(morsify.decode('-/-/-.-../-.-../-..--/-..--/-..--/-..--/-./-./-...', options), 'ต ฏ ถ ฐ ท ธ ฑ ฒ น ณ บ');
@@ -209,8 +202,17 @@ describe('morsify', function () {
     t.equal(morsify.decode('.-.../.-/..-../../..--./..--/..-.-/---././.-.-/.-..-/.-..-/---/...-.', options), 'ะ า ิ ี ึ ื ุ ู เ แ ไ ใ โ ำ');
     t.equal(morsify.decode('..-/...-/--.../.-.-.', options), '่ ้ ๊ ๋');
     t.equal(morsify.decode('.--.-/---../--..-/-.---/--.-./---.-', options), 'ั ็ ์ ๆ ฯ ฯลฯ');
-
     */
+  });
+  it('encodes unicode', function () {
+    var options = { priority: 13 };
+    t.equal(morsify.encode('你好', options), '-..----.--...../-.--..-.-----.-');
+    t.equal(morsify.encode('吃得苦中苦,方为人上人', options), '-.-.-........--/-.------..-.---/-.....-.---..--./-..---...-.--.-/-.....-.---..--./--..--/--..-.--.---..-/-..---...---.-./-..---.-.---.-./-..---.....-.-./-..---.-.---.-.');
+  });
+  it('decodes unicode', function () {
+    var options = { priority: 13 };
+    t.equal(morsify.decode('-..----.--...../-.--..-.-----.-', options), '你 好');
+    t.equal(morsify.decode('-.-.-........--/-.------..-.---/-.....-.---..--./-..---...-.--.-/-.....-.---..--./--..--/--..-.--.---..-/-..---...---.-./-..---.-.---.-./-..---.....-.-./-..---.-.---.-.', options), '吃 得 苦 中 苦 , 方 为 人 上 人');
   });
   it('returns mapped characters', function () {
     var characters = morsify.characters();

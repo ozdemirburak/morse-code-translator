@@ -100,7 +100,6 @@
       'ไ': '01001', 'โ': '111', 'ำ': '00010', '่': '001', '้': '0001',
       '๊': '11000', '๋':'01010',  'ั': '01101', '็': '11100', '์': '11001',
       'ๆ': '10111', 'ฯ': '11010',
-      // duplicates
       // 'ฃ': '1010', => duplicated with ข | 'ฅ': '101', 'ฆ': '101', => duplicated with ค | 'ฎ': '100', => duplicated with ด
       // 'ฏ': '1', => duplicated with ต | 'ฐ': '10100', => duplicated with ถ | 'ธ': '10011', 'ฑ': '10011', 'ฒ': '10011', => duplicated with ท
       // 'ณ': '10', => duplicated with ณ | 'ภ': '01100', => duplicated with พ | 'ฬ': '0100', => duplicated with ล
@@ -134,6 +133,23 @@
     return swapped;
   };
 
+  var unicodeToMorse = function (character) {
+    var ch = [];
+    for (var i = 0; i < character.length; i++) {
+      ch[i] = ('00' + character.charCodeAt(i).toString(16)).slice(-4);
+    }
+    return parseInt(ch.join(''), 16).toString(2);
+  };
+
+  var unicodeToHex = function (morse, options) {
+    morse = morse.replace(new RegExp('\\' + options.dot, 'g'), '0').replace(new RegExp('\\' + options.dash, 'g'), '1');
+    morse = parseInt(morse, 2);
+    if (isNaN(morse)) {
+      return options.invalid;
+    }
+    return decodeURIComponent(JSON.parse('"'+ '\\u' + morse.toString(16) +'"'));
+  };
+
   var getOptions = function (options) {
     options = options || {};
     options.oscillator = options.oscillator || {};
@@ -158,18 +174,21 @@
     var options = getOptions(opts);
     return text.replace(/\s+/g, '').toLocaleUpperCase().split('').map(function(character) {
       for (var set in characters) {
-        if (typeof characters[set][character] !== 'undefined') {
+        if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
           return characters[set][character];
         }
       }
-      return options.invalid;
+      return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
     }).join(options.space).replace(/0/g, options.dot).replace(/1/g, options.dash);
   };
 
   var decode = function (morse, opts) {
     var options = getOptions(opts), swapped = swapCharacters(options);
     return morse.split(options.space).map(function(characters) {
-      return swapped[characters] || options.invalid;
+      if (typeof swapped[characters] !== 'undefined') {
+        return swapped[characters];
+      }
+      return parseInt(options.priority) === 13 ? unicodeToHex(characters, options) : options.invalid;
     }).join(' ').replace(/\s+/g, ' ');
   };
 
