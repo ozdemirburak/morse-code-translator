@@ -28,7 +28,7 @@ var morsify = require('morsify');
 var encoded = morsify.encode('SOS'); // .../---/... 
 var decoded = morsify.decode('.../---/...'); // S O S
 var characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
-var audio = morsify.audio('SOS'), oscillator = audio.oscillator; // OscillatorNode
+var audio = morsify.audio('SOS');
 audio.play(); // play audio
 audio.stop(); // stop audio
 ```
@@ -44,6 +44,7 @@ Or alternatively, you can also use the library directly with including the sourc
     var audio = morsify.audio('SOS');
     var oscillator = audio.oscillator; // OscillatorNode
     var context = audio.context; // AudioContext
+    var gainNode = audio.gainNode; // GainNode
     audio.play(); // play audio
     audio.stop(); // stop audio
 </script>
@@ -85,11 +86,12 @@ var arabicAudio = morsify.audio('البُراق‎‎', { // generates the morse
     frequency: 500,  // value in hertz
     onended: function () { // event that fires when the tone has stopped playing
       console.log('ended');
-    },
+    }
   }
 }); 
 var oscillator = arabicAudio.oscillator; // OscillatorNode 
 var context = arabicAudio.context; // AudioContext; 
+var gainNode = audio.gainNode; // GainNode
 arabicAudio.play(); // will start playing morse audio
 arabicAudio.stop(); // will stop playing morse audio
 ```
