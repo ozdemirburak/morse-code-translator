@@ -99,11 +99,7 @@
       'ื': '0011', 'ุ': '00101', 'ู': '1110', 'เ': '0', 'แ': '0101',
       'ไ': '01001', 'โ': '111', 'ำ': '00010', '่': '001', '้': '0001',
       '๊': '11000', '๋':'01010',  'ั': '01101', '็': '11100', '์': '11001',
-      'ๆ': '10111', 'ฯ': '11010',
-      // 'ฃ': '1010', => duplicated with ข | 'ฅ': '101', 'ฆ': '101', => duplicated with ค | 'ฎ': '100', => duplicated with ด
-      // 'ฏ': '1', => duplicated with ต | 'ฐ': '10100', => duplicated with ถ | 'ธ': '10011', 'ฑ': '10011', 'ฒ': '10011', => duplicated with ท
-      // 'ณ': '10', => duplicated with ณ | 'ภ': '01100', => duplicated with พ | 'ฬ': '0100', => duplicated with ล
-      // 'ษ': '000', 'ศ': '000',  => duplicated with ส | 'ฤๅ': '01011', => duplicated with ฤ | 'ใ': '01001', => duplicated with ไ | 'ฯลฯ': '11101' => conflicts with ฯ
+      'ๆ': '10111', 'ฯ': '11010'
     }
   };
 
@@ -194,8 +190,8 @@
 
   var audio = function (text, opts) {
     var options = getOptions(opts), morse = encode(text, opts),
-      AudioContext = window.AudioContext || window.webkitAudioContext, ctx = new AudioContext(),
-      t = ctx.currentTime, oscillator = ctx.createOscillator(), gainNode = ctx.createGain();
+      AudioContext = window.AudioContext || window.webkitAudioContext, context = new AudioContext(),
+      t = context.currentTime, oscillator = context.createOscillator(), gainNode = context.createGain();
 
     oscillator.type = options.oscillator.type;
     oscillator.frequency.value = options.oscillator.frequency;
@@ -226,7 +222,7 @@
     }
 
     oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    gainNode.connect(context.destination);
 
     return {
       play: function () {
@@ -236,8 +232,9 @@
       stop: function () {
         oscillator.stop();
       },
-      context: ctx,
-      oscillator: oscillator
+      context: context,
+      oscillator: oscillator,
+      gainNode: gainNode
     };
   };
 
