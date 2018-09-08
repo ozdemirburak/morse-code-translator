@@ -159,7 +159,7 @@
       oscillator: {
         type: options.oscillator.type || 'sine', // sine, square, sawtooth, triangle
         frequency: options.oscillator.frequency || 500,  // value in hertz
-        onended: options.oscillator.onended || null,  // event that fires when the tone has stopped playing
+        onended: options.oscillator.onended || null  // event that fires when the tone has stopped playing
       }
     };
     characters[0] = characters[options.priority];
@@ -226,11 +226,11 @@
 
     return {
       play: function () {
-        oscillator.start();
-        oscillator.stop(t);
+        oscillator.start(context.currentTime);
+        oscillator.stop(context.currentTime + t);
       },
       stop: function () {
-        oscillator.stop();
+        oscillator.stop(context.currentTime);
       },
       context: context,
       oscillator: oscillator,
