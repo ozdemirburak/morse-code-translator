@@ -1,12 +1,16 @@
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 ;(function (name, root, factory) {
-  if (typeof exports === 'object') {
+  if ((typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object') {
     module.exports = factory();
   } else if (typeof define === 'function' && define.amd) {
     define(factory);
   } else {
     root[name] = factory();
   }
-} ('morsify', this, function () {
+})('morsify', undefined, function () {
 
   var characters = {
     '1': { // Latin => https://en.wikipedia.org/wiki/Morse_code
@@ -38,17 +42,17 @@
     },
     '5': { // Cyrillic Alphabet => https://en.wikipedia.org/wiki/Russian_Morse_code
       'А': '01', 'Б': '1000', 'В': '011', 'Г': '110', 'Д': '100', 'Е': '0',
-      'Ж': '0001', 'З': '1100', 'И': '00', 'Й': '0111', 'К': '101','Л': '0100',
+      'Ж': '0001', 'З': '1100', 'И': '00', 'Й': '0111', 'К': '101', 'Л': '0100',
       'М': '11', 'Н': '10', 'О': '111', 'П': '0110', 'Р': '010', 'С': '000',
       'Т': '1', 'У': '001', 'Ф': '0010', 'Х': '0000', 'Ц': '1010', 'Ч': '1110',
       'Ш': '1111', 'Щ': '1101', 'Ъ': '11011', 'Ы': '1011', 'Ь': '1001', 'Э': '00100',
       'Ю': '0011', 'Я': '0101'
     },
     '6': { // Greek Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
-      'Α': '01', 'Β':'1000', 'Γ':'110', 'Δ':'100', 'Ε':'0', 'Ζ':'1100',
-      'Η':'0000', 'Θ':'1010', 'Ι': '00', 'Κ': '101', 'Λ': '0100', 'Μ': '11',
-      'Ν': '10', 'Ξ': '1001', 'Ο': '111', 'Π': '0110', 'Ρ': '010', 'Σ':'000',
-      'Τ':'1', 'Υ': '1011', 'Φ':'0010', 'Χ': '1111', 'Ψ': '1101', 'Ω':'011'
+      'Α': '01', 'Β': '1000', 'Γ': '110', 'Δ': '100', 'Ε': '0', 'Ζ': '1100',
+      'Η': '0000', 'Θ': '1010', 'Ι': '00', 'Κ': '101', 'Λ': '0100', 'Μ': '11',
+      'Ν': '10', 'Ξ': '1001', 'Ο': '111', 'Π': '0110', 'Ρ': '010', 'Σ': '000',
+      'Τ': '1', 'Υ': '1011', 'Φ': '0010', 'Χ': '1111', 'Ψ': '1101', 'Ω': '011'
     },
     '7': { // Hebrew Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
       'א': '01', 'ב': '1000', 'ג': '110', 'ד': '100', 'ה': '111', 'ו': '0',
@@ -60,25 +64,25 @@
       'ا': '01', 'ب': '1000', 'ت': '1', 'ث': '1010', 'ج': '0111', 'ح': '0000',
       'خ': '111', 'د': '100', 'ذ': '1100', 'ر': '010', 'ز': '1110', 'س': '000',
       'ش': '1111', 'ص': '1001', 'ض': '0001', 'ط': '001', 'ظ': '1011', 'ع': '0101',
-      'غ': '110', 'ف': '0010', 'ق': '1101', 'ك': '101', 'ل': '0100', 'م':	'11',
-      'ن':	'10', 'ه':	'00100', 'و':	'011', 'ي':	'00', 'ﺀ':	'0'
+      'غ': '110', 'ف': '0010', 'ق': '1101', 'ك': '101', 'ل': '0100', 'م': '11',
+      'ن': '10', 'ه': '00100', 'و': '011', 'ي': '00', 'ﺀ': '0'
     },
     '9': { // Persian Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
       'ا': '01', 'ب': '1000', 'پ': '0110', 'ت': '1', 'ث': '1010', 'ج': '0111',
-      'چ': '1110', 'ح': '0000', 'خ' : '1001', 'د': '100', 'ذ': '0001', 'ر': '010',
+      'چ': '1110', 'ح': '0000', 'خ': '1001', 'د': '100', 'ذ': '0001', 'ر': '010',
       'ز': '1100', 'ژ': '110', 'س': '000', 'ش': '1111', 'ص': '0101', 'ض': '00100',
       'ط': '001', 'ظ': '1011', 'ع': '111', 'غ': '0011', 'ف': '0010', 'ق': '111000',
       'ک': '101', 'گ': '1101', 'ل': '0100', 'م': '11', 'ن': '10', 'و': '011',
       'ه': '0', 'ی': '00'
     },
     '10': { // Japanese Alphabet => https://en.wikipedia.org/wiki/Wabun_code
-      'ア': '11011', 'カ': '0100', 'サ': '10101', 'タ': '10',	'ナ': '010', 'ハ': '1000',
+      'ア': '11011', 'カ': '0100', 'サ': '10101', 'タ': '10', 'ナ': '010', 'ハ': '1000',
       'マ': '1001', 'ヤ': '011', 'ラ': '000', 'ワ': '101', 'イ': '01', 'キ': '10100',
       'シ': '11010', 'チ': '0010', 'ニ': '1010', 'ヒ': '11001', 'ミ': '00101', 'リ': '110',
       'ヰ': '01001', 'ウ': '001', 'ク': '0001', 'ス': '11101', 'ツ': '0110', 'ヌ': '0000',
       'フ': '1100', 'ム': '1', 'ユ': '10011', 'ル': '10110', 'ン': '01010', 'エ': '01000',
       'ケ': '1011', 'セ': '01110', 'テ': '01011', 'ネ': '1101', 'ヘ': '0', 'メ': '10001',
-      'レ': '111', 'ヱ': '01100', '、': '010101', 'オ': '10111', 'コ': '1111', 'ソ':'1110',
+      'レ': '111', 'ヱ': '01100', '、': '010101', 'オ': '10111', 'コ': '1111', 'ソ': '1110',
       'ト': '00100', 'ノ': '0011', 'ホ': '100', 'モ': '10010', 'ヨ': '11', 'ロ': '0101',
       'ヲ': '0111', '。': '010100'
     },
@@ -88,110 +92,117 @@
       'ㅍ': '111', 'ㅎ': '0111', 'ㅏ': '0', 'ㅑ': '00', 'ㅓ': '1', 'ㅕ': '000',
       'ㅗ': '01', 'ㅛ': '10', 'ㅜ': '0000', 'ㅠ': '010', 'ㅡ': '100', 'ㅣ': '001'
     },
-    '12' : { // Thai Alphabet => https://th.wikipedia.org/wiki/รหัสมอร์ส
+    '12': { // Thai Alphabet => https://th.wikipedia.org/wiki/รหัสมอร์ส
       'ก': '110', 'ข': '1010', 'ค': '101', 'ง': '10110', 'จ': '10010',
       'ฉ': '1111', 'ช': '1001', 'ซ': '1100', 'ญ': '0111', 'ด': '100',
       'ต': '1', 'ถ': '10100', 'ท': '10011', 'น': '10', 'บ': '1000',
-      'ป': '0110', 'ผ':'1101', 'ฝ': '10101', 'พ': '01100', 'ฟ': '0010',
+      'ป': '0110', 'ผ': '1101', 'ฝ': '10101', 'พ': '01100', 'ฟ': '0010',
       'ม': '11', 'ย': '1011', 'ร': '010', 'ล': '0100', 'ว': '011',
       'ส': '000', 'ห': '0000', 'อ': '10001', 'ฮ': '11011', 'ฤ': '01011',
       'ะ': '01000', 'า': '01', 'ิ': '00100', 'ี': '00', 'ึ': '00110',
       'ื': '0011', 'ุ': '00101', 'ู': '1110', 'เ': '0', 'แ': '0101',
       'ไ': '01001', 'โ': '111', 'ำ': '00010', '่': '001', '้': '0001',
-      '๊': '11000', '๋':'01010',  'ั': '01101', '็': '11100', '์': '11001',
+      '๊': '11000', '๋': '01010', 'ั': '01101', '็': '11100', '์': '11001',
       'ๆ': '10111', 'ฯ': '11010'
     }
   };
 
-  var getCharacters = function (opts, usePriority) {
-    var options = getOptions(opts), mapped = {};
+var getCharacters = function getCharacters(opts, usePriority) {
+    var options = getOptions(opts),
+        mapped = {};
     for (var set in characters) {
-      mapped[set] = {};
-      for (var key in characters[set]) {
-        mapped[set][key] = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
-      }
+        mapped[set] = {};
+        for (var key in characters[set]) {
+            mapped[set][key] = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
+        }
     }
     if (usePriority !== true) {
-      delete mapped[0];
+        delete mapped[0];
     }
     return mapped;
-  };
+};
 
-  var swapCharacters = function (options) {
-    var swapped = {}, mappedCharacters = getCharacters(options, true);
+var swapCharacters = function swapCharacters(options) {
+    var swapped = {},
+        mappedCharacters = getCharacters(options, true);
     for (var set in mappedCharacters) {
-      for (var key in mappedCharacters[set]) {
-        if (typeof swapped[mappedCharacters[set][key]] === 'undefined') {
-          swapped[mappedCharacters[set][key]] = key;
+        for (var key in mappedCharacters[set]) {
+            if (typeof swapped[mappedCharacters[set][key]] === 'undefined') {
+                swapped[mappedCharacters[set][key]] = key;
+            }
         }
-      }
     }
     return swapped;
-  };
+};
 
-  var unicodeToMorse = function (character) {
+var unicodeToMorse = function unicodeToMorse(character) {
     var ch = [];
     for (var i = 0; i < character.length; i++) {
-      ch[i] = ('00' + character.charCodeAt(i).toString(16)).slice(-4);
+        ch[i] = ('00' + character.charCodeAt(i).toString(16)).slice(-4);
     }
     return parseInt(ch.join(''), 16).toString(2);
-  };
+};
 
-  var unicodeToHex = function (morse, options) {
+var unicodeToHex = function unicodeToHex(morse, options) {
     morse = morse.replace(new RegExp('\\' + options.dot, 'g'), '0').replace(new RegExp('\\' + options.dash, 'g'), '1');
     morse = parseInt(morse, 2);
     if (isNaN(morse)) {
-      return options.invalid;
+        return options.invalid;
     }
-    return decodeURIComponent(JSON.parse('"'+ '\\u' + morse.toString(16) +'"'));
-  };
+    return decodeURIComponent(JSON.parse('"' + '\\u' + morse.toString(16) + '"'));
+};
 
-  var getOptions = function (options) {
+var getOptions = function getOptions(options) {
     options = options || {};
     options.oscillator = options.oscillator || {};
     options = {
-      dash: options.dash || '-',
-      dot: options.dot || '.',
-      space: options.space || '/',
-      invalid: options.invalid || '#',
-      priority: options.priority || 1,
-      unit: options.unit || 0.08, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
-      oscillator: {
-        type: options.oscillator.type || 'sine', // sine, square, sawtooth, triangle
-        frequency: options.oscillator.frequency || 500,  // value in hertz
-        onended: options.oscillator.onended || null  // event that fires when the tone has stopped playing
-      }
+        dash: options.dash || '-',
+        dot: options.dot || '.',
+        space: options.space || '/',
+        invalid: options.invalid || '#',
+        priority: options.priority || 1,
+        unit: options.unit || 0.08, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
+        oscillator: {
+            type: options.oscillator.type || 'sine', // sine, square, sawtooth, triangle
+            frequency: options.oscillator.frequency || 500, // value in hertz
+            onended: options.oscillator.onended || null // event that fires when the tone has stopped playing
+        }
     };
     characters[0] = characters[options.priority];
     return options;
-  };
+};
 
-  var encode = function (text, opts) {
+var encode = function encode(text, opts) {
     var options = getOptions(opts);
     return text.replace(/\s+/g, '').toLocaleUpperCase().split('').map(function(character) {
-      for (var set in characters) {
-        if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
-          return characters[set][character];
+        for (var set in characters) {
+            if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
+                return characters[set][character];
+            }
         }
-      }
-      return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
+        return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
     }).join(options.space).replace(/0/g, options.dot).replace(/1/g, options.dash);
-  };
+};
 
-  var decode = function (morse, opts) {
-    var options = getOptions(opts), swapped = swapCharacters(options);
+var decode = function decode(morse, opts) {
+    var options = getOptions(opts),
+        swapped = swapCharacters(options);
     return morse.split(options.space).map(function(characters) {
-      if (typeof swapped[characters] !== 'undefined') {
-        return swapped[characters];
-      }
-      return parseInt(options.priority) === 13 ? unicodeToHex(characters, options) : options.invalid;
+        if (typeof swapped[characters] !== 'undefined') {
+            return swapped[characters];
+        }
+        return parseInt(options.priority) === 13 ? unicodeToHex(characters, options) : options.invalid;
     }).join(' ').replace(/\s+/g, ' ');
-  };
+};
 
-  var audio = function (text, opts) {
-    var options = getOptions(opts), morse = encode(text, opts),
-      AudioContext = window.AudioContext || window.webkitAudioContext, context = new AudioContext(),
-      t = context.currentTime, oscillator = context.createOscillator(), gainNode = context.createGain();
+var audio = function audio(text, opts) {
+    var options = getOptions(opts),
+        morse = encode(text, opts),
+        AudioContext = window.AudioContext || window.webkitAudioContext,
+        context = new AudioContext(),
+        t = context.currentTime,
+        oscillator = context.createOscillator(),
+        gainNode = context.createGain();
 
     oscillator.type = options.oscillator.type;
     oscillator.frequency.value = options.oscillator.frequency;
@@ -199,50 +210,42 @@
 
     gainNode.gain.setValueAtTime(0, t);
 
-    var tone = function (i) {
-      gainNode.gain.setValueAtTime(1, t);
-      t += i * options.unit;
-    }, silence = function (i) {
-      gainNode.gain.setValueAtTime(0, t);
-      t += i * options.unit;
-    };
+    var tone = function tone(i) {
+            gainNode.gain.setValueAtTime(1, t);
+            t += i * options.unit;
+        },
+        silence = function silence(i) {
+            gainNode.gain.setValueAtTime(0, t);
+            t += i * options.unit;
+        };
 
     for (var i = 0; i <= morse.length; i++) {
-      if (morse[i] === options.space) {
-        silence(7);
-      } else if (morse[i] === options.dot) {
-        tone(1);
-        silence(1);
-      } else if (morse[i] === options.dash) {
-        tone(3);
-        silence(1);
-      } else {
-        silence(3);
-      }
+        if (morse[i] === options.space) {
+            silence(7);
+        } else if (morse[i] === options.dot) {
+            tone(1);
+            silence(1);
+        } else if (morse[i] === options.dash) {
+            tone(3);
+            silence(1);
+        } else {
+            silence(3);
+        }
     }
 
     oscillator.connect(gainNode);
     gainNode.connect(context.destination);
 
     return {
-      play: function () {
-        oscillator.start(context.currentTime);
-        oscillator.stop(context.currentTime + t);
-      },
-      stop: function () {
-        oscillator.stop(context.currentTime);
-      },
-      context: context,
-      oscillator: oscillator,
-      gainNode: gainNode
+        play: function play() {
+                oscillator.start(context.currentTime);
+                oscillator.stop(context.currentTime + t);
+            },
+            stop: function stop() {
+                oscillator.stop(context.currentTime);
+            },
+            context: context,
+        oscillator: oscillator,
+        gainNode: gainNode
     };
-  };
-
-  return {
-    characters: getCharacters,
-    decode: decode,
-    encode: encode,
-    audio: audio
-  };
-
-}));
+};
