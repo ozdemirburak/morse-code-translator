@@ -107,95 +107,95 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
   };
 
-var getCharacters = function getCharacters(opts, usePriority) {
+  var getCharacters = function getCharacters(opts, usePriority) {
     var options = getOptions(opts),
         mapped = {};
     for (var set in characters) {
-        mapped[set] = {};
-        for (var key in characters[set]) {
-            mapped[set][key] = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
-        }
+      mapped[set] = {};
+      for (var key in characters[set]) {
+        mapped[set][key] = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
+      }
     }
     if (usePriority !== true) {
-        delete mapped[0];
+      delete mapped[0];
     }
     return mapped;
-};
+  };
 
-var swapCharacters = function swapCharacters(options) {
+  var swapCharacters = function swapCharacters(options) {
     var swapped = {},
         mappedCharacters = getCharacters(options, true);
     for (var set in mappedCharacters) {
-        for (var key in mappedCharacters[set]) {
-            if (typeof swapped[mappedCharacters[set][key]] === 'undefined') {
-                swapped[mappedCharacters[set][key]] = key;
-            }
+      for (var key in mappedCharacters[set]) {
+        if (typeof swapped[mappedCharacters[set][key]] === 'undefined') {
+          swapped[mappedCharacters[set][key]] = key;
         }
+      }
     }
     return swapped;
-};
+  };
 
-var unicodeToMorse = function unicodeToMorse(character) {
+  var unicodeToMorse = function unicodeToMorse(character) {
     var ch = [];
     for (var i = 0; i < character.length; i++) {
-        ch[i] = ('00' + character.charCodeAt(i).toString(16)).slice(-4);
+      ch[i] = ('00' + character.charCodeAt(i).toString(16)).slice(-4);
     }
     return parseInt(ch.join(''), 16).toString(2);
-};
+  };
 
-var unicodeToHex = function unicodeToHex(morse, options) {
+  var unicodeToHex = function unicodeToHex(morse, options) {
     morse = morse.replace(new RegExp('\\' + options.dot, 'g'), '0').replace(new RegExp('\\' + options.dash, 'g'), '1');
     morse = parseInt(morse, 2);
     if (isNaN(morse)) {
-        return options.invalid;
+      return options.invalid;
     }
     return decodeURIComponent(JSON.parse('"' + '\\u' + morse.toString(16) + '"'));
-};
+  };
 
-var getOptions = function getOptions(options) {
+  var getOptions = function getOptions(options) {
     options = options || {};
     options.oscillator = options.oscillator || {};
     options = {
-        dash: options.dash || '-',
-        dot: options.dot || '.',
-        space: options.space || '/',
-        invalid: options.invalid || '#',
-        priority: options.priority || 1,
-        unit: options.unit || 0.08, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
-        oscillator: {
-            type: options.oscillator.type || 'sine', // sine, square, sawtooth, triangle
-            frequency: options.oscillator.frequency || 500, // value in hertz
-            onended: options.oscillator.onended || null // event that fires when the tone has stopped playing
-        }
+      dash: options.dash || '-',
+      dot: options.dot || '.',
+      space: options.space || '/',
+      invalid: options.invalid || '#',
+      priority: options.priority || 1,
+      unit: options.unit || 0.08, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
+      oscillator: {
+        type: options.oscillator.type || 'sine', // sine, square, sawtooth, triangle
+        frequency: options.oscillator.frequency || 500, // value in hertz
+        onended: options.oscillator.onended || null // event that fires when the tone has stopped playing
+      }
     };
     characters[0] = characters[options.priority];
     return options;
-};
+  };
 
-var encode = function encode(text, opts) {
+  var encode = function encode(text, opts) {
     var options = getOptions(opts);
-    return text.replace(/\s+/g, '').toLocaleUpperCase().split('').map(function(character) {
-        for (var set in characters) {
-            if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
-                return characters[set][character];
-            }
+    return text.replace(/\s+/g, '').toLocaleUpperCase().split('').map(function (character) {
+      for (var set in characters) {
+        if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
+          return characters[set][character];
         }
-        return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
+      }
+      return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
     }).join(options.space).replace(/0/g, options.dot).replace(/1/g, options.dash);
-};
+  };
 
-var decode = function decode(morse, opts) {
+  var decode = function decode(morse, opts) {
     var options = getOptions(opts),
         swapped = swapCharacters(options);
-    return morse.split(options.space).map(function(characters) {
-        if (typeof swapped[characters] !== 'undefined') {
-            return swapped[characters];
-        }
-        return parseInt(options.priority) === 13 ? unicodeToHex(characters, options) : options.invalid;
+    return morse.split(options.space).map(function (characters) {
+      if (typeof swapped[characters] !== 'undefined') {
+        return swapped[characters];
+      }
+      return parseInt(options.priority) === 13 ? unicodeToHex(characters, options) : options.invalid;
     }).join(' ').replace(/\s+/g, ' ');
-};
+  };
 
-var audio = function audio(text, opts) {
+  var audio = function audio(text, opts) {
     var options = getOptions(opts),
         morse = encode(text, opts),
         AudioContext = window.AudioContext || window.webkitAudioContext,
@@ -211,41 +211,49 @@ var audio = function audio(text, opts) {
     gainNode.gain.setValueAtTime(0, t);
 
     var tone = function tone(i) {
-            gainNode.gain.setValueAtTime(1, t);
-            t += i * options.unit;
-        },
+      gainNode.gain.setValueAtTime(1, t);
+      t += i * options.unit;
+    },
         silence = function silence(i) {
-            gainNode.gain.setValueAtTime(0, t);
-            t += i * options.unit;
-        };
+      gainNode.gain.setValueAtTime(0, t);
+      t += i * options.unit;
+    };
 
     for (var i = 0; i <= morse.length; i++) {
-        if (morse[i] === options.space) {
-            silence(7);
-        } else if (morse[i] === options.dot) {
-            tone(1);
-            silence(1);
-        } else if (morse[i] === options.dash) {
-            tone(3);
-            silence(1);
-        } else {
-            silence(3);
-        }
+      if (morse[i] === options.space) {
+        silence(7);
+      } else if (morse[i] === options.dot) {
+        tone(1);
+        silence(1);
+      } else if (morse[i] === options.dash) {
+        tone(3);
+        silence(1);
+      } else {
+        silence(3);
+      }
     }
 
     oscillator.connect(gainNode);
     gainNode.connect(context.destination);
 
     return {
-        play: function play() {
-                oscillator.start(context.currentTime);
-                oscillator.stop(context.currentTime + t);
-            },
-            stop: function stop() {
-                oscillator.stop(context.currentTime);
-            },
-            context: context,
-        oscillator: oscillator,
-        gainNode: gainNode
+      play: function play() {
+        oscillator.start(context.currentTime);
+        oscillator.stop(context.currentTime + t);
+      },
+      stop: function stop() {
+        oscillator.stop(context.currentTime);
+      },
+      context: context,
+      oscillator: oscillator,
+      gainNode: gainNode
     };
-};
+  };
+
+  return {
+    characters: getCharacters,
+    decode: decode,
+    encode: encode,
+    audio: audio
+  };
+});
