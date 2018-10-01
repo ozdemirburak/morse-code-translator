@@ -188,10 +188,15 @@
     }).join(' ').replace(/\s+/g, ' ');
   };
 
+
+  var AudioContext = window.AudioContext || window.webkitAudioContext;
+  var context      = new AudioContext();
   var audio = function (text, opts) {
-    var options = getOptions(opts), morse = encode(text, opts),
-      AudioContext = window.AudioContext || window.webkitAudioContext, context = new AudioContext(),
-      t = context.currentTime, oscillator = context.createOscillator(), gainNode = context.createGain();
+    var options    = getOptions(opts),
+        morse      = encode(text, opts),
+        t          = context.currentTime, 
+        oscillator = context.createOscillator(),
+        gainNode   = context.createGain(), timeout;
 
     oscillator.type = options.oscillator.type;
     oscillator.frequency.value = options.oscillator.frequency;
@@ -227,10 +232,12 @@
     return {
       play: function () {
         oscillator.start(context.currentTime);
-        oscillator.stop(context.currentTime + t);
+        timeout = setTimeout(this.stop.bind(this), (t - context.currentTime) * 1000);
       },
       stop: function () {
-        oscillator.stop(context.currentTime);
+        clearTimeout(timeout);
+        timeout = 0;
+        oscillator.stop(0);
       },
       context: context,
       oscillator: oscillator,
@@ -244,5 +251,4 @@
     encode: encode,
     audio: audio
   };
-
 }));
