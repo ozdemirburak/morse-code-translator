@@ -1,22 +1,20 @@
 {
-  extends: 'standard',
-
-  env: {
-    mocha: true
+  "extends": "standard",
+  "env": {
+    "mocha": true,
+    "es6": true
   },
-
-  // Almost Standard
-  rules: {
+  "rules": {
     // Disable: Closing curly brace does not appear on the same line as the subsequent block
-    'brace-style': [2, 'stroustrup'],
+    "brace-style": [2, "stroustrup"],
 
     // Disable: More than 1 blank line not allowed
-    'no-multiple-empty-lines': 'off',
+    "no-multiple-empty-lines": "off",
 
     // Disable: Object properties must go on a new line if they aren't all on the same line
-    'object-property-newline': 'off',
+    "object-property-newline": "off",
 
     // Disable: Block must not be padded by blank lines
-    'padded-blocks': 'off'
+    "padded-blocks": "off"
   }
 }
