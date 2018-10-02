@@ -198,6 +198,7 @@
     const context = new AudioContext();
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
+    let timeout;
     let t = context.currentTime;
 
     oscillator.type = options.oscillator.type;
@@ -236,10 +237,12 @@
     return {
       play: () => {
         oscillator.start(context.currentTime);
-        oscillator.stop(context.currentTime + t);
+        timeout = setTimeout(this.stop.bind(this), (t - context.currentTime) * 1000);
       },
       stop: () => {
-        oscillator.stop(context.currentTime);
+        clearTimeout(timeout);
+        timeout = 0;
+        oscillator.stop(0);
       },
       context,
       oscillator,
