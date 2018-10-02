@@ -1,4 +1,4 @@
-;(function (name, root, factory) {
+;(((name, root, factory) => {
   if (typeof exports === 'object') {
     module.exports = factory();
   } else if (typeof define === 'function' && define.amd) {
@@ -6,9 +6,10 @@
   } else {
     root[name] = factory();
   }
-} ('morsify', this, function () {
-
-  var characters = {
+})('morsify', this, () => {
+  'use strict';
+  
+  const characters = {
     '1': { // Latin => https://en.wikipedia.org/wiki/Morse_code
       'A': '01', 'B': '1000', 'C': '1010', 'D': '100', 'E': '0', 'F': '0010',
       'G': '110', 'H': '0000', 'I': '00', 'J': '0111', 'K': '101', 'L': '0100',
@@ -103,11 +104,12 @@
     }
   };
 
-  var getCharacters = function (opts, usePriority) {
-    var options = getOptions(opts), mapped = {};
-    for (var set in characters) {
+  const getCharacters = (opts, usePriority) => {
+    const options = getOptions(opts);
+    const mapped = {};
+    for (const set in characters) {
       mapped[set] = {};
-      for (var key in characters[set]) {
+      for (const key in characters[set]) {
         mapped[set][key] = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
       }
     }
@@ -117,10 +119,11 @@
     return mapped;
   };
 
-  var swapCharacters = function (options) {
-    var swapped = {}, mappedCharacters = getCharacters(options, true);
-    for (var set in mappedCharacters) {
-      for (var key in mappedCharacters[set]) {
+  const swapCharacters = (options) => {
+    const swapped = {};
+    const mappedCharacters = getCharacters(options, true);
+    for (const set in mappedCharacters) {
+      for (const key in mappedCharacters[set]) {
         if (typeof swapped[mappedCharacters[set][key]] === 'undefined') {
           swapped[mappedCharacters[set][key]] = key;
         }
@@ -129,15 +132,15 @@
     return swapped;
   };
 
-  var unicodeToMorse = function (character) {
-    var ch = [];
-    for (var i = 0; i < character.length; i++) {
+  const unicodeToMorse = (character) => {
+    const ch = [];
+    for (let i = 0; i < character.length; i++) {
       ch[i] = ('00' + character.charCodeAt(i).toString(16)).slice(-4);
     }
     return parseInt(ch.join(''), 16).toString(2);
   };
 
-  var unicodeToHex = function (morse, options) {
+  const unicodeToHex = (morse, options) => {
     morse = morse.replace(new RegExp('\\' + options.dot, 'g'), '0').replace(new RegExp('\\' + options.dash, 'g'), '1');
     morse = parseInt(morse, 2);
     if (isNaN(morse)) {
@@ -146,7 +149,7 @@
     return decodeURIComponent(JSON.parse('"'+ '\\u' + morse.toString(16) +'"'));
   };
 
-  var getOptions = function (options) {
+  const getOptions = (options) => {
     options = options || {};
     options.oscillator = options.oscillator || {};
     options = {
@@ -166,10 +169,10 @@
     return options;
   };
 
-  var encode = function (text, opts) {
-    var options = getOptions(opts);
+  const encode = (text, opts) => {
+    const options = getOptions(opts);
     return text.replace(/\s+/g, '').toLocaleUpperCase().split('').map(function(character) {
-      for (var set in characters) {
+      for (let set in characters) {
         if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
           return characters[set][character];
         }
@@ -178,8 +181,8 @@
     }).join(options.space).replace(/0/g, options.dot).replace(/1/g, options.dash);
   };
 
-  var decode = function (morse, opts) {
-    var options = getOptions(opts), swapped = swapCharacters(options);
+  const decode = (morse, opts) => {
+    const options = getOptions(opts), swapped = swapCharacters(options);
     return morse.split(options.space).map(function(characters) {
       if (typeof swapped[characters] !== 'undefined') {
         return swapped[characters];
@@ -188,10 +191,14 @@
     }).join(' ').replace(/\s+/g, ' ');
   };
 
-  var audio = function (text, opts) {
-    var options = getOptions(opts), morse = encode(text, opts),
-      AudioContext = window.AudioContext || window.webkitAudioContext, context = new AudioContext(),
-      t = context.currentTime, oscillator = context.createOscillator(), gainNode = context.createGain();
+  const audio = (text, opts) => {
+    const options = getOptions(opts);
+    const morse = encode(text, opts);
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    let t = context.currentTime;
 
     oscillator.type = options.oscillator.type;
     oscillator.frequency.value = options.oscillator.frequency;
@@ -199,15 +206,17 @@
 
     gainNode.gain.setValueAtTime(0, t);
 
-    var tone = function (i) {
+    const tone = (i) => {
       gainNode.gain.setValueAtTime(1, t);
       t += i * options.unit;
-    }, silence = function (i) {
+    };
+    
+    const silence = (i) => {
       gainNode.gain.setValueAtTime(0, t);
       t += i * options.unit;
     };
 
-    for (var i = 0; i <= morse.length; i++) {
+    for (let i = 0; i <= morse.length; i++) {
       if (morse[i] === options.space) {
         silence(7);
       } else if (morse[i] === options.dot) {
@@ -225,24 +234,23 @@
     gainNode.connect(context.destination);
 
     return {
-      play: function () {
+      play: () => {
         oscillator.start(context.currentTime);
         oscillator.stop(context.currentTime + t);
       },
-      stop: function () {
+      stop: () => {
         oscillator.stop(context.currentTime);
       },
-      context: context,
-      oscillator: oscillator,
-      gainNode: gainNode
+      context,
+      oscillator,
+      gainNode
     };
   };
 
   return {
     characters: getCharacters,
-    decode: decode,
-    encode: encode,
-    audio: audio
+    decode,
+    encode,
+    audio
   };
-
 }));
