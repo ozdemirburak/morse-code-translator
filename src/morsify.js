@@ -7,6 +7,8 @@
     root[name] = factory();
   }
 })('morsify', this, () => {
+  'use strict';
+  
   const characters = {
     '1': { // Latin => https://en.wikipedia.org/wiki/Morse_code
       'A': '01', 'B': '1000', 'C': '1010', 'D': '100', 'E': '0', 'F': '0010',
