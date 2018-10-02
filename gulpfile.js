@@ -1,16 +1,13 @@
-var gulp = require('gulp'), concat = require('gulp-concat'), uglify = require('gulp-uglify'), pump = require('pump');
+const gulp = require('gulp');
+const babel = require('gulp-babel');
+const minify = require('gulp-babel-minify');
+const concat = require('gulp-concat');
 
-gulp.task('minify-js', function (cb) {
-  pump([
-      gulp.src('./src/morsify.js'),
-      concat('morsify.min.js'),
-      uglify(),
-      gulp.dest('dist')
-    ],
-    cb
-  );
-});
-
-gulp.task('default', function() {
-  gulp.run('minify-js');
-});
+gulp.task('default', () =>
+  gulp.src('src/morsify.js')
+    .pipe(babel())
+    .pipe(gulp.dest('dist'))
+    .pipe(minify())
+    .pipe(concat('morsify.min.js'))
+    .pipe(gulp.dest('dist'))
+);
