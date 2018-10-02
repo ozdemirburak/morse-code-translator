@@ -36,9 +36,11 @@
     "pump": "^1.0.2"
   },
   "main": "./src/morsify.js",
+  "types": "index.d.ts",
   "files": [
     "LICENSE",
     "README.md",
+    "index.d.ts",
     "src",
     "dist"
   ],
