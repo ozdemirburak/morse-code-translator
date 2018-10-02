@@ -191,13 +191,16 @@
     }).join(' ').replace(/\s+/g, ' ');
   };
 
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  const context = new AudioContext();
+  const isBrowser = typeof window !== 'undefined';
+  const AudioContext = isBrowser ? window.AudioContext || window.webkitAudioContext : null;
+  const context = isBrowser ? new AudioContext() : null;
+
   const audio = (text, opts) => {
     const options = getOptions(opts);
     const morse = encode(text, opts);
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
+
     let timeout;
     let t = context.currentTime;
 

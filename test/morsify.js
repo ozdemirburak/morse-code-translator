@@ -1,5 +1,5 @@
-var t = require('assert');
-var morsify = require('../src/morsify');
+const t = require('assert');
+const morsify = require('../src/morsify');
 
 describe('morsify', function () {
   it('encodes english alphabet', function () {
@@ -35,7 +35,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('ÙŬŽŹŻ'), '..--/..--/--..-/--..-./--..-');
   });
   it('decodes non-english alphabet', function () {
-    var options = { priority: 4 };
+    const options = { priority: 4 };
     t.equal(morsify.decode('.--.-/.--.-/.--.-/.--.-/.--.-/.-.-', options), 'Ã Ã Ã Ã Ã Ä');
     t.equal(morsify.decode('.-.-/.-.-/-.-../-.-../-.-../--.', options), 'Ä Ä Ç Ç Ç Č');
     t.equal(morsify.decode('..-../..--./.-..-/..-../..-../..-..', options), 'Đ Ð È Đ Đ Đ');
@@ -53,7 +53,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('ЮЯ'), '..--/.-.-');
   });
   it('decodes cyrilic alphabet', function () {
-    var options = { priority: 5 };
+    const options = { priority: 5 };
     t.equal(morsify.decode('.-/-.../.--/--./-../.', options), 'А Б В Г Д Е');
     t.equal(morsify.decode('...-/--../../.---/-.-/.-..', options), 'Ж З И Й К Л');
     t.equal(morsify.decode('--/-./---/.--./.-./...', options), 'М Н О П Р С');
@@ -62,14 +62,14 @@ describe('morsify', function () {
     t.equal(morsify.decode('..--/.-.-', options), 'Ю Я');
   });
   it('encodes greek alphabet', function () {
-    var options = { priority: 6 };
+    const options = { priority: 6 };
     t.equal(morsify.encode('ΑΒΓΔΕΖ', options), '.-/-.../--./-.././--..');
     t.equal(morsify.encode('ΗΘΙΚΛΜ', options), '..../-.-./../-.-/.-../--');
     t.equal(morsify.encode('ΝΞΟΠΡΣ', options), '-./-..-/---/.--./.-./...');
     t.equal(morsify.encode('ΤΥΦΧΨΩ', options), '-/-.--/..-./----/--.-/.--');
   });
   it('decodes greek alphabet', function () {
-    var options = { priority: 6 };
+    const options = { priority: 6 };
     t.equal(morsify.decode('.-/-.../--./-.././--..', options), 'Α Β Γ Δ Ε Ζ');
     t.equal(morsify.decode('..../-.-./../-.-/.-../--', options), 'Η Θ Ι Κ Λ Μ');
     t.equal(morsify.decode('-./-..-/---/.--./.-./...', options), 'Ν Ξ Ο Π Ρ Σ');
@@ -82,7 +82,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('קרשת'), '--.-/.-./.../-');
   });
   it('decodes hebrew alphabet', function () {
-    var options = { priority: 7 };
+    const options = { priority: 7 };
     t.equal(morsify.decode('.-/-.../--./-../---/.', options), 'א ב ג ד ה ו');
     t.equal(morsify.decode('--../..../..-/../-.-/.-..', options), 'ז ח ט י כ ל');
     t.equal(morsify.decode('--/-./-.-./.---/.--./.--', options), 'מ נ ס ע פ צ');
@@ -96,7 +96,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('نهويﺀ'), '-./..-../.--/../.');
   });
   it('decodes arabic alphabet', function () {
-    var options = { priority: 8 };
+    const options = { priority: 8 };
     t.equal(morsify.decode('.-/-.../-/-.-./.---/....', options), 'ا ب ت ث ج ح');
     t.equal(morsify.decode('---/-../--../.-./---./...', options), 'خ د ذ ر ز س');
     t.equal(morsify.decode('----/-..-/...-/..-/-.--/.-.-', options), 'ش ص ض ط ظ ع');
@@ -104,7 +104,7 @@ describe('morsify', function () {
     t.equal(morsify.decode('-./..-../.--/../.', options), 'ن ه و ي ﺀ');
   });
   it('encodes persian alphabet', function () {
-    var options = { priority: 9 };
+    const options = { priority: 9 };
     t.equal(morsify.encode('ابپتثج', options), '.-/-.../.--./-/-.-./.---');
     t.equal(morsify.encode('چحخدذر', options), '---./..../-..-/-../...-/.-.');
     t.equal(morsify.encode('زژسشصض', options), '--../--./.../----/.-.-/..-..');
@@ -113,7 +113,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('هی', options), './..');
   });
   it('decodes persian alphabet', function () {
-    var options = { priority: 9 };
+    const options = { priority: 9 };
     t.equal(morsify.decode('.-/-.../.--./-/-.-./.---', options), 'ا ب پ ت ث ج');
     t.equal(morsify.decode('---./..../-..-/-../...-/.-.', options), 'چ ح خ د ذ ر');
     t.equal(morsify.decode('--../--./.../----/.-.-/..-..', options), 'ز ژ س ش ص ض');
@@ -121,7 +121,7 @@ describe('morsify', function () {
     t.equal(morsify.decode('./..', options), 'ه ی');
   });
   it('encodes japanese alphabet', function () {
-    var options = { priority: 10 };
+    const options = { priority: 10 };
     t.equal(morsify.encode('アカサタナハ', options), '--.--/.-../-.-.-/-./.-./-...');
     t.equal(morsify.encode('マヤラワイキ', options), '-..-/.--/.../-.-/.-/-.-..');
     t.equal(morsify.encode('シチニヒミリ', options), '--.-./..-./-.-./--..-/..-.-/--.');
@@ -133,7 +133,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('ヲ。', options), '.---/.-.-..');
   });
   it('decodes japanese alphabet', function () {
-    var options = { priority: 10 };
+    const options = { priority: 10 };
     t.equal(morsify.decode('--.--/.-../-.-.-/-./.-./-...', options), 'ア カ サ タ ナ ハ');
     t.equal(morsify.decode('-..-/.--/.../-.-/.-/-.-..', options), 'マ ヤ ラ ワ イ キ');
     t.equal(morsify.decode('--.-./..-./-.-./--..-/..-.-/--.', options), 'シ チ ニ ヒ ミ リ');
@@ -145,21 +145,21 @@ describe('morsify', function () {
     t.equal(morsify.decode('.---/.-.-..', options), 'ヲ 。');
   });
   it('encodes korean alphabet', function () {
-    var options = { priority: 11 };
+    const options = { priority: 11 };
     t.equal(morsify.encode('ㄱㄴㄷㄹㅁㅂ', options), '.-../..-./-.../...-/--/.--');
     t.equal(morsify.encode('ㅅㅇㅈㅊㅋㅌ', options), '--./-.-/.--./-.-./-..-/--..');
     t.equal(morsify.encode('ㅍㅎㅏㅑㅓㅕ', options), '---/.---/./../-/...');
     t.equal(morsify.encode('ㅗㅛㅜㅠㅡㅣ', options), '.-/-./..../.-./-../..-');
   });
   it('decodes korean alphabet', function () {
-    var options = { priority: 11 };
+    const options = { priority: 11 };
     t.equal(morsify.decode('.-../..-./-.../...-/--/.--', options), 'ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ');
     t.equal(morsify.decode('--./-.-/.--./-.-./-..-/--..', options), 'ㅅ ㅇ ㅈ ㅊ ㅋ ㅌ');
     t.equal(morsify.decode('---/.---/./../-/...', options), 'ㅍ ㅎ ㅏ ㅑ ㅓ ㅕ');
     t.equal(morsify.decode('.-/-./..../.-./-../..-', options), 'ㅗ ㅛ ㅜ ㅠ ㅡ ㅣ');
   });
   it('encodes thai alphabet', function () {
-    var options = { priority: 12 };
+    const options = { priority: 12 };
     t.equal(morsify.encode('กขคง', options), '--./-.-./-.-/-.--.');
     t.equal(morsify.encode('จฉชซญด', options), '-..-./----/-..-/--../.---/-..');
     t.equal(morsify.encode('ตถทนบ', options), '-/-.-../-..--/-./-...');
@@ -171,7 +171,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('ั็์ๆฯ', options), '.--.-/---../--..-/-.---/--.-.');
   });
   it('decodes thai alphabet', function () {
-    var options = { priority: 12 };
+    const options = { priority: 12 };
     t.equal(morsify.decode('--./-.-./-.-/-.--.', options), 'ก ข ค ง');
     t.equal(morsify.decode('-..-./----/-..-/--../.---/-..', options), 'จ ฉ ช ซ ญ ด');
     t.equal(morsify.decode('-/-.-../-..--/-./-...', options), 'ต ถ ท น บ');
@@ -183,17 +183,17 @@ describe('morsify', function () {
     t.equal(morsify.decode('.--.-/---../--..-/-.---/--.-.', options), 'ั ็ ์ ๆ ฯ');
   });
   it('encodes unicode', function () {
-    var options = { priority: 13 };
+    const options = { priority: 13 };
     t.equal(morsify.encode('你好', options), '-..----.--...../-.--..-.-----.-');
     t.equal(morsify.encode('吃得苦中苦,方为人上人', options), '-.-.-........--/-.------..-.---/-.....-.---..--./-..---...-.--.-/-.....-.---..--./--..--/--..-.--.---..-/-..---...---.-./-..---.-.---.-./-..---.....-.-./-..---.-.---.-.');
   });
   it('decodes unicode', function () {
-    var options = { priority: 13 };
+    const options = { priority: 13 };
     t.equal(morsify.decode('-..----.--...../-.--..-.-----.-', options), '你 好');
     t.equal(morsify.decode('-.-.-........--/-.------..-.---/-.....-.---..--./-..---...-.--.-/-.....-.---..--./--..--/--..-.--.---..-/-..---...---.-./-..---.-.---.-./-..---.....-.-./-..---.-.---.-.', options), '吃 得 苦 中 苦 , 方 为 人 上 人');
   });
   it('returns mapped characters', function () {
-    var characters = morsify.characters();
+    let characters = morsify.characters();
     t.equal(characters[1]['A'], '.-');
     t.equal(characters[2]['0'], '-----');
     t.equal(characters[3]['.'], '.-.-.-');
@@ -220,5 +220,4 @@ describe('morsify', function () {
     t.equal(characters[11]['ㄱ'], '•–••');
     t.equal(characters[12]['ก'], '––•');
   });
-
 });

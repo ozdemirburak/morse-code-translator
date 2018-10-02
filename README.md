@@ -24,11 +24,11 @@ $ yarn add morsify
 ## Usage
 
 ```js
-var morsify = require('morsify');
-var encoded = morsify.encode('SOS'); // .../---/... 
-var decoded = morsify.decode('.../---/...'); // S O S
-var characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
-var audio = morsify.audio('SOS');
+const morsify = require('morsify');
+const encoded = morsify.encode('SOS'); // .../---/... 
+const decoded = morsify.decode('.../---/...'); // S O S
+const characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
+const audio = morsify.audio('SOS');
 audio.play(); // play audio
 audio.stop(); // stop audio
 ```
