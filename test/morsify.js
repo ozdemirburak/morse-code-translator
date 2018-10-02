@@ -2,6 +2,8 @@ const t = require('assert');
 const morsify = require('../src/morsify');
 
 describe('morsify', function () {
+  'use strict';
+
   it('encodes english alphabet', function () {
     t.equal(morsify.encode('the quick brown fox jumps over the lazy dog'), '-/...././--.-/..-/../-.-./-.-/-.../.-./---/.--/-./..-./---/-..-/.---/..-/--/.--./.../---/...-/./.-./-/...././.-../.-/--../-.--/-../---/--.')
     t.equal(morsify.encode('the quick brown fox jumps over the lazy dog', { dash: '–', dot: '•', space: ' ' }), '– •••• • ––•– ••– •• –•–• –•– –••• •–• ––– •–– –• ••–• ––– –••– •––– ••– –– •––• ••• ––– •••– • •–• – •••• • •–•• •– ––•• –•–– –•• ––– ––•')
