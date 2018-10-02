@@ -191,11 +191,11 @@
     }).join(' ').replace(/\s+/g, ' ');
   };
 
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const context = new AudioContext();
   const audio = (text, opts) => {
     const options = getOptions(opts);
     const morse = encode(text, opts);
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const context = new AudioContext();
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
     let timeout;
@@ -234,16 +234,21 @@
     oscillator.connect(gainNode);
     gainNode.connect(context.destination);
 
+
+    const play = () => {
+      oscillator.start(context.currentTime);
+      timeout = setTimeout(() => stop(), (t - context.currentTime) * 1000);
+    };
+
+    const stop = () => {
+      clearTimeout(timeout);
+      timeout = 0;
+      oscillator.stop(0);
+    };
+
     return {
-      play: () => {
-        oscillator.start(context.currentTime);
-        timeout = setTimeout(this.stop.bind(this), (t - context.currentTime) * 1000);
-      },
-      stop: () => {
-        clearTimeout(timeout);
-        timeout = 0;
-        oscillator.stop(0);
-      },
+      play,
+      stop,
       context,
       oscillator,
       gainNode
