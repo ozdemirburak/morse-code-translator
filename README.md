@@ -1,11 +1,12 @@
-# morsify
+# Morsify - Morse Code Translator with Audio
 
 [![npm-version]][npm] [![npm-downloads]][npm] [![travis-ci]][travis]
 
 Morse code encoder and decoder with no dependencies supports Latin, Cyrillic, Greek, Hebrew, 
-Arabic, Persian, Japanese, Korean, Thai, and Unicode (Chinese and the others) characters with audio generation functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API). 
+Arabic, Persian, Japanese, Korean, Thai, and Unicode (Chinese and the others) characters with audio generation 
+functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API). 
 
-Live demo can be found here: [https://morsify.net](https://morsify.net)
+Live Demo: [https://morsify.net](https://morsify.net)
 
 ## Installation
 
@@ -74,12 +75,12 @@ Set the priority option according to the list below.
 - 13 => Unicode (Chinese and the others)
 
 ```js
-var cyrillic = morsify.encode('Ленинград', { priority: 5 }); // .-.././-./../-./--./.-./.-/-..
-var greek = morsify.decode('.../.-/--./.-/.--./.--', { priority: 6 }); // Σ Α Γ Α Π Ω
-var hebrew = morsify.decode('––– –... ––– –. ––. .. .–.. –––', { dash: '–', dot: '.', space: ' ', priority: 7 }); // ה ב ה נ ג י ל ה
-var chinese = morsify.encode('你好', { priority: 13 }); // -..----.--...../-.--..-.-----.-
-var characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
-var arabicAudio = morsify.audio('البُراق‎‎', { // generates the morse .-/.-../-.../.-./.-/--.- then generates the audio from it
+const cyrillic = morsify.encode('Ленинград', { priority: 5 }); // .-.././-./../-./--./.-./.-/-..
+const greek = morsify.decode('.../.-/--./.-/.--./.--', { priority: 6 }); // Σ Α Γ Α Π Ω
+const hebrew = morsify.decode('––– –... ––– –. ––. .. .–.. –––', { dash: '–', dot: '.', space: ' ', priority: 7 }); // ה ב ה נ ג י ל ה
+const chinese = morsify.encode('你好', { priority: 13 }); // -..----.--...../-.--..-.-----.-
+const characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
+const arabicAudio = morsify.audio('البُراق‎‎', { // generates the morse .-/.-../-.../.-./.-/--.- then generates the audio from it
   unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
   oscillator: {
     type: 'sine', // sine, square, sawtooth, triangle
@@ -89,9 +90,9 @@ var arabicAudio = morsify.audio('البُراق‎‎', { // generates the morse
     }
   }
 }); 
-var oscillator = arabicAudio.oscillator; // OscillatorNode 
-var context = arabicAudio.context; // AudioContext; 
-var gainNode = audio.gainNode; // GainNode
+const oscillator = arabicAudio.oscillator; // OscillatorNode 
+const context = arabicAudio.context; // AudioContext; 
+const gainNode = audio.gainNode; // GainNode
 arabicAudio.play(); // will start playing morse audio
 arabicAudio.stop(); // will stop playing morse audio
 ```
