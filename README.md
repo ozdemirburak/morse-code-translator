@@ -26,8 +26,8 @@ $ yarn add morsify
 
 ```js
 const morsify = require('morsify');
-const encoded = morsify.encode('SOS'); // .../---/... 
-const decoded = morsify.decode('.../---/...'); // S O S
+const encoded = morsify.encode('SOS'); // ... --- ...
+const decoded = morsify.decode('... --- ...'); // SOS
 const characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
 const audio = morsify.audio('SOS');
 audio.play(); // play audio
@@ -39,8 +39,8 @@ Or alternatively, you can also use the library directly with including the sourc
 ```html
 <script src="https://rawgit.com/ozdemirburak/morsify/master/dist/morsify.min.js"></script>
 <script>
-    var encoded = morsify.encode('SOS'); // .../---/... 
-    var decoded = morsify.decode('.../---/...'); // S O S
+    var encoded = morsify.encode('SOS'); // ... --- ... 
+    var decoded = morsify.decode('... --- ...'); // SOS
     var characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
     var audio = morsify.audio('SOS');
     var oscillator = audio.oscillator; // OscillatorNode
@@ -75,12 +75,12 @@ Set the priority option according to the list below.
 - 13 => Unicode (Chinese and the others)
 
 ```js
-const cyrillic = morsify.encode('Ленинград', { priority: 5 }); // .-.././-./../-./--./.-./.-/-..
-const greek = morsify.decode('.../.-/--./.-/.--./.--', { priority: 6 }); // Σ Α Γ Α Π Ω
-const hebrew = morsify.decode('––– –... ––– –. ––. .. .–.. –––', { dash: '–', dot: '.', space: ' ', priority: 7 }); // ה ב ה נ ג י ל ה
-const chinese = morsify.encode('你好', { priority: 13 }); // -..----.--...../-.--..-.-----.-
+const cyrillic = morsify.encode('Ленинград', { priority: 5 }); // .-.. . -. .. -. --. .-. .- -..
+const greek = morsify.decode('... .- --. .- .--. .--', { priority: 6 }); // ΣΑΓΑΠΩ
+const hebrew = morsify.decode('.. ––– . –––', { dash: '–', dot: '.', priority: 7 }); // יהוה 
+const chinese = morsify.encode('你好', { priority: 13 }); // -..----.--..... -.--..-.-----.-
 const characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
-const arabicAudio = morsify.audio('البُراق‎‎', { // generates the morse .-/.-../-.../.-./.-/--.- then generates the audio from it
+const arabicAudio = morsify.audio('البراق', { // generates the morse .- .-.. -... .-. .- --.- then generates the audio from it
   unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
   oscillator: {
     type: 'sine', // sine, square, sawtooth, triangle

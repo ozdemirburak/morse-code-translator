@@ -1,7 +1,7 @@
 {
   "name": "morsify",
-  "version": "1.0.0",
-  "description": "Morse code translator and decoder which also generates audio.",
+  "version": "2.0.0",
+  "description": "Morse code translator, morse encoder and decoder, which can also generate audio.",
   "keywords": [
     "morse",
     "morse alphabet",
@@ -27,15 +27,15 @@
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",
-    "coveralls": "^2.13.3",
-    "gulp": "^3.9.1",
+    "coveralls": "^3.0.3",
+    "gulp": "^4.0.0",
     "gulp-babel": "^8.0.0",
     "gulp-babel-minify": "^0.5.0",
     "gulp-concat": "^2.6.1",
     "istanbul": "^0.4.5",
     "jshint": "^2.9.6",
     "lodash": "^4.17.11",
-    "mocha": "^3.5.3"
+    "mocha": "^6.0.2"
   },
   "main": "./src/morsify.js",
   "files": [
