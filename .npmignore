@@ -1,6 +1,4 @@
 coverage/
 npm-debug.log
 package-lock.json
-yarn-error.log
-yarn.lock
 .idea

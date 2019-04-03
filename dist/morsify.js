@@ -1,3 +1,11 @@
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 ;
@@ -495,13 +503,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
       }
     };
+    characters[1][' '] = options.space;
     characters[0] = characters[options.priority];
     return options;
   };
 
   var encode = function encode(text, opts) {
     var options = getOptions(opts);
-    return text.replace(/\s+/g, '').toLocaleUpperCase().split('').map(function (character) {
+    return _toConsumableArray(text.replace(/\s+/g, ' ').trim().toLocaleUpperCase()).map(function (character) {
       for (var set in characters) {
         if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
           return characters[set][character];
@@ -509,19 +518,19 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       }
 
       return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
-    }).join(options.space).replace(/0/g, options.dot).replace(/1/g, options.dash);
+    }).join(' ').replace(/0/g, options.dot).replace(/1/g, options.dash);
   };
 
   var decode = function decode(morse, opts) {
     var options = getOptions(opts),
         swapped = swapCharacters(options);
-    return morse.split(options.space).map(function (characters) {
+    return morse.replace(/\s+/g, ' ').trim().split(' ').map(function (characters) {
       if (typeof swapped[characters] !== 'undefined') {
         return swapped[characters];
       }
 
       return parseInt(options.priority) === 13 ? unicodeToHex(characters, options) : options.invalid;
-    }).join(' ').replace(/\s+/g, ' ');
+    }).join('');
   };
 
   var isBrowser = typeof window !== 'undefined';

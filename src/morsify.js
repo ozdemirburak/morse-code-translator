@@ -8,7 +8,7 @@
   }
 })('morsify', this, () => {
   'use strict';
-  
+
   const characters = {
     '1': { // Latin => https://en.wikipedia.org/wiki/Morse_code
       'A': '01', 'B': '1000', 'C': '1010', 'D': '100', 'E': '0', 'F': '0010',
@@ -165,30 +165,31 @@
         onended: options.oscillator.onended || null  // event that fires when the tone has stopped playing
       }
     };
+    characters[1][' '] = options.space;
     characters[0] = characters[options.priority];
     return options;
   };
 
   const encode = (text, opts) => {
     const options = getOptions(opts);
-    return text.replace(/\s+/g, '').toLocaleUpperCase().split('').map(function(character) {
+    return [...text.replace(/\s+/g, ' ').trim().toLocaleUpperCase()].map(function(character) {
       for (let set in characters) {
         if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
           return characters[set][character];
         }
       }
       return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
-    }).join(options.space).replace(/0/g, options.dot).replace(/1/g, options.dash);
+    }).join(' ').replace(/0/g, options.dot).replace(/1/g, options.dash);
   };
 
   const decode = (morse, opts) => {
     const options = getOptions(opts), swapped = swapCharacters(options);
-    return morse.split(options.space).map(function(characters) {
+    return morse.replace(/\s+/g, ' ').trim().split(' ').map(function(characters) {
       if (typeof swapped[characters] !== 'undefined') {
         return swapped[characters];
       }
       return parseInt(options.priority) === 13 ? unicodeToHex(characters, options) : options.invalid;
-    }).join(' ').replace(/\s+/g, ' ');
+    }).join('');
   };
 
   const isBrowser = typeof window !== 'undefined';
@@ -214,7 +215,7 @@
       gainNode.gain.setValueAtTime(1, t);
       t += i * options.unit;
     };
-    
+
     const silence = (i) => {
       gainNode.gain.setValueAtTime(0, t);
       t += i * options.unit;
@@ -236,7 +237,6 @@
 
     oscillator.connect(gainNode);
     gainNode.connect(context.destination);
-
 
     const play = () => {
       oscillator.start(context.currentTime);
