@@ -490,6 +490,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       dash: options.dash || '-',
       dot: options.dot || '.',
       space: options.space || '/',
+      separator: options.separator || ' ',
       invalid: options.invalid || '#',
       priority: options.priority || 1,
       unit: options.unit || 0.08,
@@ -503,14 +504,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
       }
     };
-    characters[1][' '] = options.space;
+    characters[1][options.separator] = options.space;
     characters[0] = characters[options.priority];
     return options;
   };
 
   var encode = function encode(text, opts) {
     var options = getOptions(opts);
-    return _toConsumableArray(text.replace(/\s+/g, ' ').trim().toLocaleUpperCase()).map(function (character) {
+    return _toConsumableArray(text.replace(/\s+/g, options.separator).trim().toLocaleUpperCase()).map(function (character) {
       for (var set in characters) {
         if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
           return characters[set][character];
@@ -518,13 +519,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       }
 
       return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
-    }).join(' ').replace(/0/g, options.dot).replace(/1/g, options.dash);
+    }).join(options.separator).replace(/0/g, options.dot).replace(/1/g, options.dash);
   };
 
   var decode = function decode(morse, opts) {
     var options = getOptions(opts),
         swapped = swapCharacters(options);
-    return morse.replace(/\s+/g, ' ').trim().split(' ').map(function (characters) {
+    return morse.replace(/\s+/g, options.separator).trim().split(options.separator).map(function (characters) {
       if (typeof swapped[characters] !== 'undefined') {
         return swapped[characters];
       }

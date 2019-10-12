@@ -1,8 +1,9 @@
 {
   "name": "morsify",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Morse code translator, morse encoder and decoder, which can also generate audio.",
   "keywords": [
+    "morsify",
     "morse",
     "morse alphabet",
     "morse audio",
@@ -14,8 +15,18 @@
     "morse code translator",
     "samuel morse",
     "codigo morse",
+    "codice morse",
     "морзе",
-    "morsify"
+    "азбука морзе",
+    "mors kodu",
+    "mors alfabesi",
+    "kod morse'a",
+    "모스 부호",
+    "モールス信号",
+    "摩爾斯電碼",
+    "รหัสมอร์ส",
+    "קוד מורס",
+    "شفرة مورس"
   ],
   "license": "MIT",
   "homepage": "https://github.com/ozdemirburak/morsify",
@@ -25,17 +36,17 @@
     "url": "https://github.com/ozdemirburak/morsify.git"
   },
   "devDependencies": {
-    "@babel/core": "^7.1.2",
-    "@babel/preset-env": "^7.1.0",
-    "coveralls": "^3.0.3",
-    "gulp": "^4.0.0",
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "coveralls": "^3.0.7",
+    "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
-    "gulp-babel-minify": "^0.5.0",
+    "gulp-babel-minify": "^0.5.1",
     "gulp-concat": "^2.6.1",
     "istanbul": "^0.4.5",
-    "jshint": "^2.9.6",
-    "lodash": "^4.17.11",
-    "mocha": "^6.0.2"
+    "jshint": "^2.10.2",
+    "lodash": "^4.17.15",
+    "mocha": "^6.2.1"
   },
   "main": "./src/morsify.js",
   "files": [
