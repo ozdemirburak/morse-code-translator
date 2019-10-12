@@ -156,6 +156,7 @@
       dash: options.dash || '-',
       dot: options.dot || '.',
       space: options.space || '/',
+      separator: options.separator || ' ',
       invalid: options.invalid || '#',
       priority: options.priority || 1,
       unit: options.unit || 0.08, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
@@ -165,26 +166,26 @@
         onended: options.oscillator.onended || null  // event that fires when the tone has stopped playing
       }
     };
-    characters[1][' '] = options.space;
+    characters[1][options.separator] = options.space;
     characters[0] = characters[options.priority];
     return options;
   };
 
   const encode = (text, opts) => {
     const options = getOptions(opts);
-    return [...text.replace(/\s+/g, ' ').trim().toLocaleUpperCase()].map(function(character) {
+    return [...text.replace(/\s+/g, options.separator).trim().toLocaleUpperCase()].map(function(character) {
       for (let set in characters) {
         if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
           return characters[set][character];
         }
       }
       return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
-    }).join(' ').replace(/0/g, options.dot).replace(/1/g, options.dash);
+    }).join(options.separator).replace(/0/g, options.dot).replace(/1/g, options.dash);
   };
 
   const decode = (morse, opts) => {
     const options = getOptions(opts), swapped = swapCharacters(options);
-    return morse.replace(/\s+/g, ' ').trim().split(' ').map(function(characters) {
+    return morse.replace(/\s+/g, options.separator).trim().split(options.separator).map(function(characters) {
       if (typeof swapped[characters] !== 'undefined') {
         return swapped[characters];
       }

@@ -78,6 +78,7 @@ Set the priority option according to the list below.
 const cyrillic = morsify.encode('Ленинград', { priority: 5 }); // .-.. . -. .. -. --. .-. .- -..
 const greek = morsify.decode('... .- --. .- .--. .--', { priority: 6 }); // ΣΑΓΑΠΩ
 const hebrew = morsify.decode('.. ––– . –––', { dash: '–', dot: '.', priority: 7 }); // יהוה 
+const japanese = morsify.encode('NEWS', { priority: 10, dash: '－', dot: '・', separator: '　' }); // －・　・　・－－　・・・
 const chinese = morsify.encode('你好', { priority: 13 }); // -..----.--..... -.--..-.-----.-
 const characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
 const arabicAudio = morsify.audio('البراق', { // generates the morse .- .-.. -... .-. .- --.- then generates the audio from it

@@ -123,28 +123,28 @@ describe('morsify', function () {
     t.equal(morsify.decode('. ..', options), 'هی');
   });
   it('encodes japanese alphabet', function () {
-    const options = { priority: 10 };
-    t.equal(morsify.encode('アカサタナハ', options), '--.-- .-.. -.-.- -. .-. -...');
-    t.equal(morsify.encode('マヤラワイキ', options), '-..- .-- ... -.- .- -.-..');
-    t.equal(morsify.encode('シチニヒミリ', options), '--.-. ..-. -.-. --..- ..-.- --.');
-    t.equal(morsify.encode('ヰウクスツヌ', options),  '.-..- ..- ...- ---.- .--. ....');
-    t.equal(morsify.encode('フムユルンエ', options), '--.. - -..-- -.--. .-.-. .-...');
-    t.equal(morsify.encode('ケセテネヘメ', options), '-.-- .---. .-.-- --.- . -...-');
-    t.equal(morsify.encode('レヱ、オコソ', options), '--- .--.. .-.-.- -.--- ---- ---.');
-    t.equal(morsify.encode('トノホモヨロ', options), '..-.. ..-- -.. -..-. -- .-.-');
-    t.equal(morsify.encode('ヲ。', options), '.--- .-.-..');
+    const options = { priority: 10, dash: '－', dot: '・', separator: '　' };
+    t.equal(morsify.encode('アカサタナハ', options), '－－・－－　・－・・　－・－・－　－・　・－・　－・・・');
+    t.equal(morsify.encode('マヤラワイキ', options), '－・・－　・－－　・・・　－・－　・－　－・－・・');
+    t.equal(morsify.encode('シチニヒミリ', options), '－－・－・　・・－・　－・－・　－－・・－　・・－・－　－－・');
+    t.equal(morsify.encode('ヰウクスツヌ', options),  '・－・・－　・・－　・・・－　－－－・－　・－－・　・・・・');
+    t.equal(morsify.encode('フムユルンエ', options), '－－・・　－　－・・－－　－・－－・　・－・－・　・－・・・');
+    t.equal(morsify.encode('ケセテネヘメ', options), '－・－－　・－－－・　・－・－－　－－・－　・　－・・・－');
+    t.equal(morsify.encode('レヱ、オコソ', options), '－－－　・－－・・　・－・－・－　－・－－－　－－－－　－－－・');
+    t.equal(morsify.encode('トノホモヨロ', options), '・・－・・　・・－－　－・・　－・・－・　－－　・－・－');
+    t.equal(morsify.encode('ヲ。', options), '・－－－　・－・－・・');
   });
   it('decodes japanese alphabet', function () {
-    const options = { priority: 10 };
-    t.equal(morsify.decode('--.-- .-.. -.-.- -. .-. -...', options), 'アカサタナハ');
-    t.equal(morsify.decode('-..- .-- ... -.- .- -.-..', options), 'マヤラワイキ');
-    t.equal(morsify.decode('--.-. ..-. -.-. --..- ..-.- --.', options), 'シチニヒミリ');
-    t.equal(morsify.decode('.-..- ..- ...- ---.- .--. ....', options), 'ヰウクスツヌ');
-    t.equal(morsify.decode('--.. - -..-- -.--. .-.-. .-...', options), 'フムユルンエ');
-    t.equal(morsify.decode('-.-- .---. .-.-- --.- . -...-', options), 'ケセテネヘメ');
-    t.equal(morsify.decode('--- .--.. .-.-.- -.--- ---- ---.', options), 'レヱ、オコソ');
-    t.equal(morsify.decode('..-.. ..-- -.. -..-. -- .-.-', options), 'トノホモヨロ');
-    t.equal(morsify.decode('.--- .-.-..', options), 'ヲ。');
+    const options = { priority: 10, dash: '－', dot: '・', separator: '　' };
+    t.equal(morsify.decode('－－・－－　・－・・　－・－・－　－・　・－・　－・・・', options), 'アカサタナハ');
+    t.equal(morsify.decode('－・・－　・－－　・・・　－・－　・－　－・－・・', options), 'マヤラワイキ');
+    t.equal(morsify.decode('－－・－・　・・－・　－・－・　－－・・－　・・－・－　－－・', options), 'シチニヒミリ');
+    t.equal(morsify.decode('・－・・－　・・－　・・・－　－－－・－　・－－・　・・・・', options), 'ヰウクスツヌ');
+    t.equal(morsify.decode('－－・・　－　－・・－－　－・－－・　・－・－・　・－・・・', options), 'フムユルンエ');
+    t.equal(morsify.decode('－・－－　・－－－・　・－・－－　－－・－　・　－・・・－', options), 'ケセテネヘメ');
+    t.equal(morsify.decode('－－－　・－－・・　・－・－・－　－・－－－　－－－－　－－－・', options), 'レヱ、オコソ');
+    t.equal(morsify.decode('・・－・・　・・－－　－・・　－・・－・　－－　・－・－', options), 'トノホモヨロ');
+    t.equal(morsify.decode('・－－－　・－・－・・', options), 'ヲ。');
   });
   it('encodes korean alphabet', function () {
     const options = { priority: 11 };
