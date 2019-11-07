@@ -1,6 +1,6 @@
 {
   "name": "morsify",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Morse code translator, morse encoder and decoder, which can also generate audio.",
   "keywords": [
     "morsify",
@@ -36,17 +36,17 @@
     "url": "https://github.com/ozdemirburak/morsify.git"
   },
   "devDependencies": {
-    "@babel/core": "^7.6.4",
-    "@babel/preset-env": "^7.6.3",
+    "@babel/core": "^7.7.2",
+    "@babel/preset-env": "^7.7.1",
     "coveralls": "^3.0.7",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-babel-minify": "^0.5.1",
     "gulp-concat": "^2.6.1",
     "istanbul": "^0.4.5",
-    "jshint": "^2.10.2",
+    "jshint": "^2.10.3",
     "lodash": "^4.17.15",
-    "mocha": "^6.2.1"
+    "mocha": "^6.2.2"
   },
   "main": "./src/morsify.js",
   "files": [

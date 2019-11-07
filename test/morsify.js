@@ -29,7 +29,7 @@ describe('morsify', function () {
   it('encodes non-english alphabet', function () {
     t.equal(morsify.encode('ÃÁÅÀÂÄ'), '.--.- .--.- .--.- .--.- .--.- .-.-');
     t.equal(morsify.encode('ĄÆÇĆĈČ'), '.-.- .-.- -.-.. -.-.. -.-.. --.');
-    t.equal(morsify.encode('ĐÐÈËĘÉ'), '..-.. ..--. .-..- ..-.. ..-.. ..-..');
+    t.equal(morsify.encode('ĘÐÈËĘÉ'), '..-.. ..--. .-..- ..-.. ..-.. ..-..');
     t.equal(morsify.encode('ÊĞĜĤİÏ'), '-..-. --.-. --.-. ---- .-..- -..--');
     t.equal(morsify.encode('ÌĴŁŃÑÓ'), '.---. .---. .-..- --.-- --.-- ---.');
     t.equal(morsify.encode('ÒÖÔØŚŞ'), '---. ---. ---. ---. ...-... .--..');
@@ -40,7 +40,7 @@ describe('morsify', function () {
     const options = { priority: 4 };
     t.equal(morsify.decode('.--.- .--.- .--.- .--.- .--.- .-.-', options), 'ÃÃÃÃÃÄ');
     t.equal(morsify.decode('.-.- .-.- -.-.. -.-.. -.-.. --.', options), 'ÄÄÇÇÇČ');
-    t.equal(morsify.decode('..-.. ..--. .-..- ..-.. ..-.. ..-..', options), 'ĐÐÈĐĐĐ');
+    t.equal(morsify.decode('..-.. ..--. .-..- ..-.. ..-.. ..-..', options), 'ĘÐÈĘĘĘ');
     t.equal(morsify.decode('-..-. --.-. --.-. ---- .-..- -..--', options), 'ÊĞĞĤÈÏ');
     t.equal(morsify.decode('.---. .---. .-..- --.-- --.-- ---.', options), 'ÌÌÈŃŃÓ');
     t.equal(morsify.decode('---- ---- ...-. ... ... .--.. ..--', options), 'ĤĤŜSSŞÜ');
