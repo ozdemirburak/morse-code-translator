@@ -169,7 +169,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       'Ь': '1001',
       'Э': '00100',
       'Ю': '0011',
-      'Я': '0101'
+      'Я': '0101',
+      'Ї': '01110',
+      'Є': '00100',
+      'І': '00'
     },
     '6': {
       // Greek Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
