@@ -52,7 +52,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('МНОПРС'), '-- -. --- .--. .-. ...');
     t.equal(morsify.encode('ТУФХЦЧ'), '- ..- ..-. .... -.-. ---.');
     t.equal(morsify.encode('ШЩЪЫЬЭ'), '---- --.- --.-- -.-- -..- ..-..');
-    t.equal(morsify.encode('ЮЯ'), '..-- .-.-');
+    t.equal(morsify.encode('ЮЯЄІЇ'), '..-- .-.- ..-.. .. .---.');
   });
   it('decodes cyrilic alphabet', function () {
     const options = { priority: 5 };
@@ -61,7 +61,7 @@ describe('morsify', function () {
     t.equal(morsify.decode('-- -. --- .--. .-. ...', options), 'МНОПРС');
     t.equal(morsify.decode('- ..- ..-. .... -.-. ---.', options), 'ТУФХЦЧ');
     t.equal(morsify.decode('---- --.- --.-- -.-- -..- ..-..', options), 'ШЩЪЫЬЭ');
-    t.equal(morsify.decode('..-- .-.-', options), 'ЮЯ');
+    t.equal(morsify.decode('..-- .-.- ..-.. .. .---.', options), 'ЮЯЭИЇ');
   });
   it('encodes greek alphabet', function () {
     const options = { priority: 6 };
