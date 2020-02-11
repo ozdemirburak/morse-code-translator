@@ -6,7 +6,7 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 ;
 
@@ -294,7 +294,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       'ی': '00'
     },
     '10': {
-      // Japanese Alphabet => https://en.wikipedia.org/wiki/Wabun_code
+      // Japanese Alphabet => https://ja.wikipedia.org/wiki/%E3%83%A2%E3%83%BC%E3%83%AB%E3%82%B9%E7%AC%A6%E5%8F%B7#%E5%92%8C%E6%96%87%E3%83%A2%E3%83%BC%E3%83%AB%E3%82%B9%E7%AC%A6%E5%8F%B7
       'ア': '11011',
       'カ': '0100',
       'サ': '10101',
@@ -333,7 +333,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       'メ': '10001',
       'レ': '111',
       'ヱ': '01100',
-      '、': '010101',
       'オ': '10111',
       'コ': '1111',
       'ソ': '1110',
@@ -344,7 +343,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       'ヨ': '11',
       'ロ': '0101',
       'ヲ': '0111',
-      '。': '010100'
+      '゛': '00',
+      '゜': '00110',
+      '。': '010100',
+      'ー': '01101',
+      '、': '010101',
+      '（': '101101',
+      '）': '010010'
     },
     '11': {
       // Korean Alphabet => https://en.wikipedia.org/wiki/SKATS
