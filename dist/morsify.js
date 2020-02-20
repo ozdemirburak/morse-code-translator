@@ -172,7 +172,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       'Я': '0101',
       'Ї': '01110',
       'Є': '00100',
-      'І': '00'
+      'І': '00',
+      'Ґ': '110'
     },
     '6': {
       // Greek Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets

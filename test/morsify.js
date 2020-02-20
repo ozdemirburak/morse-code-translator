@@ -52,7 +52,7 @@ describe('morsify', function () {
     t.equal(morsify.encode('МНОПРС'), '-- -. --- .--. .-. ...');
     t.equal(morsify.encode('ТУФХЦЧ'), '- ..- ..-. .... -.-. ---.');
     t.equal(morsify.encode('ШЩЪЫЬЭ'), '---- --.- --.-- -.-- -..- ..-..');
-    t.equal(morsify.encode('ЮЯЄІЇ'), '..-- .-.- ..-.. .. .---.');
+    t.equal(morsify.encode('ЮЯЄІЇҐ'), '..-- .-.- ..-.. .. .---. --.');
   });
   it('decodes cyrilic alphabet', function () {
     const options = { priority: 5 };
