@@ -186,16 +186,6 @@ describe('morsify', function () {
     t.equal(morsify.decode('..- ...- --... .-.-.', options), '่้๊๋');
     t.equal(morsify.decode('.--.- ---.. --..- -.--- --.-.', options), 'ั็์ๆฯ');
   });
-  it('encodes unicode', function () {
-    const options = { priority: 13 };
-    t.equal(morsify.encode('你好', options), '-..----.--..... -.--..-.-----.-');
-    t.equal(morsify.encode('吃得苦中苦,方为人上人', options), '-.-.-........-- -.------..-.--- -.....-.---..--. -..---...-.--.- -.....-.---..--. --..-- --..-.--.---..- -..---...---.-. -..---.-.---.-. -..---.....-.-. -..---.-.---.-.');
-  });
-  it('decodes unicode', function () {
-    const options = { priority: 13 };
-    t.equal(morsify.decode('-..----.--..... -.--..-.-----.-', options), '你好');
-    t.equal(morsify.decode('-.-.-........-- -.------..-.--- -.....-.---..--. -..---...-.--.- -.....-.---..--. --..-- --..-.--.---..- -..---...---.-. -..---.-.---.-. -..---.....-.-. -..---.-.---.-.', options), '吃得苦中苦,方为人上人');
-  });
   it('returns mapped characters', function () {
     let characters = morsify.characters();
     t.equal(characters[1]['A'], '.-');

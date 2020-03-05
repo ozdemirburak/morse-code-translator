@@ -3,7 +3,7 @@
 [![npm-version]][npm] [![npm-downloads]][npm] [![travis-ci]][travis]
 
 Morse code encoder and decoder with no dependencies supports Latin, Cyrillic, Greek, Hebrew,
-Arabic, Persian, Japanese, Korean, Thai, and Unicode (Chinese and the others) characters with audio generation
+Arabic, Persian, Japanese, Korean and Thai characters with audio generation
 functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API).
 
 See Morse Translator in action: [https://morsify.net](https://morsify.net)
@@ -72,14 +72,12 @@ Set the priority option according to the list below.
 - 10 => Japanese
 - 11 => Korean
 - 12 => Thai
-- 13 => Unicode (Chinese and the others)
 
 ```js
 const cyrillic = morsify.encode('Ленинград', { priority: 5 }); // .-.. . -. .. -. --. .-. .- -..
 const greek = morsify.decode('... .- --. .- .--. .--', { priority: 6 }); // ΣΑΓΑΠΩ
 const hebrew = morsify.decode('.. ––– . –––', { dash: '–', dot: '.', priority: 7 }); // יהוה
 const japanese = morsify.encode('NEWS', { priority: 10, dash: '－', dot: '・', separator: '　' }); // －・　・　・－－　・・・
-const chinese = morsify.encode('你好', { priority: 13 }); // -..----.--..... -.--..-.-----.-
 const characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
 const arabicAudio = morsify.audio('البراق', { // generates the morse .- .-.. -... .-. .- --.- then generates the audio from it
   unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
