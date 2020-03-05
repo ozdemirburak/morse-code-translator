@@ -1,6 +1,6 @@
 {
   "name": "morsify",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "Morse code translator, Morse encoder and decoder which can also generate audio.",
   "keywords": [
     "morsify",

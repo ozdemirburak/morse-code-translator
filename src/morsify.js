@@ -133,23 +133,6 @@
     return swapped;
   };
 
-  const unicodeToMorse = (character) => {
-    const ch = [];
-    for (let i = 0; i < character.length; i++) {
-      ch[i] = ('00' + character.charCodeAt(i).toString(16)).slice(-4);
-    }
-    return parseInt(ch.join(''), 16).toString(2);
-  };
-
-  const unicodeToHex = (morse, options) => {
-    morse = morse.replace(new RegExp('\\' + options.dot, 'g'), '0').replace(new RegExp('\\' + options.dash, 'g'), '1');
-    morse = parseInt(morse, 2);
-    if (isNaN(morse)) {
-      return options.invalid;
-    }
-    return decodeURIComponent(JSON.parse('"'+ '\\u' + morse.toString(16) +'"'));
-  };
-
   const getOptions = (options) => {
     options = options || {};
     options.oscillator = options.oscillator || {};
@@ -180,7 +163,7 @@
           return characters[set][character];
         }
       }
-      return parseInt(options.priority) === 13 ? unicodeToMorse(character) : options.invalid;
+      return options.invalid;
     }).join(options.separator).replace(/0/g, options.dot).replace(/1/g, options.dash);
   };
 
@@ -190,15 +173,20 @@
       if (typeof swapped[characters] !== 'undefined') {
         return swapped[characters];
       }
-      return parseInt(options.priority) === 13 ? unicodeToHex(characters, options) : options.invalid;
+      return options.invalid;
     }).join('');
   };
 
-  const isBrowser = typeof window !== 'undefined';
-  const AudioContext = isBrowser ? window.AudioContext || window.webkitAudioContext : null;
-  const context = isBrowser ? new AudioContext() : null;
+  let AudioContext = null;
+  let context = null;
 
   const audio = (text, opts) => {
+
+    if (AudioContext === null && typeof window !== 'undefined') {
+      AudioContext = window.AudioContext || window.webkitAudioContext;
+      context = new AudioContext();
+    }
+
     const options = getOptions(opts);
     const morse = encode(text, opts);
     const oscillator = context.createOscillator();
