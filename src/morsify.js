@@ -180,7 +180,7 @@
   let AudioContext = null;
   let context = null;
 
-  const audio = (text, opts) => {
+  const audio = (text, opts, morseString) => {
 
     if (AudioContext === null && typeof window !== 'undefined') {
       AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -188,7 +188,7 @@
     }
 
     const options = getOptions(opts);
-    const morse = encode(text, opts);
+    const morse = morseString || encode(text, opts);
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
 

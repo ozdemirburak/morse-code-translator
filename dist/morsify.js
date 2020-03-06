@@ -524,14 +524,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   var AudioContext = null;
   var context = null;
 
-  var audio = function audio(text, opts) {
+  var audio = function audio(text, opts, morseString) {
     if (AudioContext === null && typeof window !== 'undefined') {
       AudioContext = window.AudioContext || window.webkitAudioContext;
       context = new AudioContext();
     }
 
     var options = getOptions(opts);
-    var morse = encode(text, opts);
+    var morse = morseString || encode(text, opts);
     var oscillator = context.createOscillator();
     var gainNode = context.createGain();
     var timeout;
