@@ -6,7 +6,7 @@ Morse code encoder and decoder with no dependencies supports Latin, Cyrillic, Gr
 Arabic, Persian, Japanese, Korean and Thai characters with audio generation
 functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API).
 
-See Morse Translator in action: [https://morsify.net](https://morsify.net)
+See Morse Translator in action: [https://morsedecoder.com](https://morsedecoder.com)
 
 ## Installation
 
