@@ -1,12 +1,9 @@
-# Morsify - Morse Code Translator with Audio
+# [Morse Code Translator](https://morsedecoder.com) with Audio - Morsify
 
 [![npm-version]][npm] [![npm-downloads]][npm] [![travis-ci]][travis]
 
-Morse code encoder and decoder with no dependencies supports Latin, Cyrillic, Greek, Hebrew,
-Arabic, Persian, Japanese, Korean and Thai characters with audio generation
-functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API).
-
-See Morse Translator in action: [https://morsedecoder.com](https://morsedecoder.com)
+Morsify is a Morse code encoder and decoder with no dependencies. Currently, it supports Latin, Cyrillic, Greek, Hebrew, Arabic,
+Persian, Japanese, Korean, and Thai, with audio-generation functionality using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API).
 
 ## Installation
 
@@ -34,7 +31,7 @@ audio.play(); // play audio
 audio.stop(); // stop audio
 ```
 
-Or alternatively, you can also use the library directly with including the source file.
+Alternatively, you can use the library directly with including the source file.
 
 ```html
 <script src="https://rawgit.com/ozdemirburak/morsify/master/dist/morsify.min.js"></script>
@@ -53,10 +50,10 @@ Or alternatively, you can also use the library directly with including the sourc
 
 ## Options and Localization
 
-You can customize the dash, dot or space characters and specify the alphabet with the priority option for
+You can customize the dash, dot, or space characters and specify the alphabet with the priority option for
 an accurate encoding and decoding.
 
-What priority option does is, gives direction to the plugin to start to searching for the given character set first.
+The priority option gives direction to the plugin to start searching for the given character set first.
 
 Set the priority option according to the list below.
 
@@ -79,21 +76,21 @@ const greek = morsify.decode('... .- --. .- .--. .--', { priority: 6 }); // ΣΑ
 const hebrew = morsify.decode('.. ––– . –––', { dash: '–', dot: '.', priority: 7 }); // יהוה
 const japanese = morsify.encode('NEWS', { priority: 10, dash: '－', dot: '・', separator: '　' }); // －・　・　・－－　・・・
 const characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
-const arabicAudio = morsify.audio('البراق', { // generates the morse .- .-.. -... .-. .- --.- then generates the audio from it
+const arabicAudio = morsify.audio('البراق', { // generates the Morse .- .-.. -... .-. .- --.- then generates the audio from it
   unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
   oscillator: {
     type: 'sine', // sine, square, sawtooth, triangle
     frequency: 500,  // value in hertz
-    onended: function () { // event that fires when the tone has stopped playing
+    onended: function () { // event that fires when the tone stops playing
       console.log('ended');
     }
   }
 });
 const oscillator = arabicAudio.oscillator; // OscillatorNode
 const context = arabicAudio.context; // AudioContext;
-const gainNode = audio.gainNode; // GainNode
-arabicAudio.play(); // will start playing morse audio
-arabicAudio.stop(); // will stop playing morse audio
+const gainNode = arabicAudio.gainNode; // GainNode
+arabicAudio.play(); // will start playing Morse audio
+arabicAudio.stop(); // will stop playing Morse audio
 ```
 
 ## Contributing and Known Issues
@@ -102,8 +99,7 @@ Contributions are welcome.
 
 ## Generating Minified Files
 
-Install node and npm following one of the techniques explained within
-this [link](https://gist.github.com/isaacs/579814) and run the commands below.
+Install node and npm and run the commands below.
 
 ``` bash
 $ npm install --global gulp-cli
