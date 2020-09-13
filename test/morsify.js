@@ -128,9 +128,9 @@ describe('morsify', function () {
     t.equal(morsify.encode('マヤラワイキ', options), '－・・－　・－－　・・・　－・－　・－　－・－・・');
     t.equal(morsify.encode('シチニヒミリ', options), '－－・－・　・・－・　－・－・　－－・・－　・・－・－　－－・');
     t.equal(morsify.encode('ヰウクスツヌ', options),  '・－・・－　・・－　・・・－　－－－・－　・－－・　・・・・');
-    t.equal(morsify.encode('フムユルンエ', options), '－－・・　－　－・・－－　－・－－・　・－・－・　・－・・・');
+    t.equal(morsify.encode('フムユルンエ', options), '－－・・　－　－・・－－　－・－－・　・－・－・　－・－－－');
     t.equal(morsify.encode('ケセテネヘメ', options), '－・－－　・－－－・　・－・－－　－－・－　・　－・・・－');
-    t.equal(morsify.encode('レヱ、オコソ', options), '－－－　・－－・・　・－・－・－　－・－－－　－－－－　－－－・');
+    t.equal(morsify.encode('レヱ、オコソ', options), '－－－　・－－・・　・－・－・－　・－・・・　－－－－　－－－・');
     t.equal(morsify.encode('トノホモヨロ', options), '・・－・・　・・－－　－・・　－・・－・　－－　・－・－');
     t.equal(morsify.encode('ヲ゛゜。ー', options), '・－－－　・・　・・－－・　・－・－・・　・－－・－');
     t.equal(morsify.encode('（）', options), '－・－－・－　・－・・－・');
@@ -141,9 +141,9 @@ describe('morsify', function () {
     t.equal(morsify.decode('－・・－　・－－　・・・　－・－　・－　－・－・・', options), 'マヤラワイキ');
     t.equal(morsify.decode('－－・－・　・・－・　－・－・　－－・・－　・・－・－　－－・', options), 'シチニヒミリ');
     t.equal(morsify.decode('・－・・－　・・－　・・・－　－－－・－　・－－・　・・・・', options), 'ヰウクスツヌ');
-    t.equal(morsify.decode('－－・・　－　－・・－－　－・－－・　・－・－・　・－・・・', options), 'フムユルンエ');
+    t.equal(morsify.decode('－－・・　－　－・・－－　－・－－・　・－・－・　－・－－－', options), 'フムユルンエ');
     t.equal(morsify.decode('－・－－　・－－－・　・－・－－　－－・－　・　－・・・－', options), 'ケセテネヘメ');
-    t.equal(morsify.decode('－－－　・－－・・　・－・－・－　－・－－－　－－－－　－－－・', options), 'レヱ、オコソ');
+    t.equal(morsify.decode('－－－　・－－・・　・－・－・－　・－・・・　－－－－　－－－・', options), 'レヱ、オコソ');
     t.equal(morsify.decode('・・－・・　・・－－　－・・　－・・－・　－－　・－・－', options), 'トノホモヨロ');
     t.equal(morsify.decode('・－－－　・・　・・－－・　・－・－・・　・－－・－', options), 'ヲ゛゜。ー');
     t.equal(morsify.decode('－・－－・－　・－・・－・', options), '（）');
