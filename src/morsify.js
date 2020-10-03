@@ -220,7 +220,10 @@
       } else if (morse[i] === options.dash) {
         tone(3);
         silence(1);
-      } else {
+      } else if (
+        (typeof morse[i + 1] !== 'undefined' && morse[i + 1] !== options.space) &&
+        (typeof morse[i - 1] !== 'undefined' && morse[i - 1] !== options.space)
+      ) {
         silence(3);
       }
     }
