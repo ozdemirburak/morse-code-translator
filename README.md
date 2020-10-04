@@ -78,6 +78,7 @@ const japanese = morsify.encode('NEWS', { priority: 10, dash: '－', dot: '・',
 const characters = morsify.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
 const arabicAudio = morsify.audio('البراق', { // generates the Morse .- .-.. -... .-. .- --.- then generates the audio from it
   unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
+  fwUnit: 0.1, // period of one Farnsworth unit to control intercharacter and interword gaps
   oscillator: {
     type: 'sine', // sine, square, sawtooth, triangle
     frequency: 500,  // value in hertz

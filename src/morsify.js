@@ -144,6 +144,7 @@
       invalid: options.invalid || '#',
       priority: options.priority || 1,
       unit: options.unit || 0.08, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
+      fwUnit: options.fwUnit || options.unit || 0.08, // Farnsworth unit to control intercharacter and interword gaps
       oscillator: {
         type: options.oscillator.type || 'sine', // sine, square, sawtooth, triangle
         frequency: options.oscillator.frequency || 500,  // value in hertz
@@ -211,17 +212,25 @@
       t += i * options.unit;
     };
 
+    const gap = (i) => {
+      gainNode.gain.setValueAtTime(0, t);
+      t += i * options.fwUnit;
+    };
+
     for (let i = 0; i <= morse.length; i++) {
       if (morse[i] === options.space) {
-        silence(7);
+        gap(7);
       } else if (morse[i] === options.dot) {
         tone(1);
         silence(1);
       } else if (morse[i] === options.dash) {
         tone(3);
         silence(1);
-      } else {
-        silence(3);
+      } else if (
+        (typeof morse[i + 1] !== 'undefined' && morse[i + 1] !== options.space) &&
+        (typeof morse[i - 1] !== 'undefined' && morse[i - 1] !== options.space)
+      ) {
+        gap(3);
       }
     }
 
