@@ -178,14 +178,45 @@
     }).join('');
   };
 
-  const mergeBuffers = (recBuffers, recLength) => {
-    let result = new Float32Array(recLength);
-    let offset = 0;
-    for (let i = 0; i < recBuffers.length; i++) {
-        result.set(recBuffers[i], offset);
-        offset += recBuffers[i].length;
+  const getGainTimings = (morse, opts, currentTime = 0) => {
+    let timings = [];
+    let time = 0;
+
+    timings.push([0, time]);
+
+    const tone = (i) => {
+      timings.push([1, currentTime + time]);
+      time += i * opts.unit;
+    };
+
+    const silence = (i) => {
+      timings.push([0, currentTime + time]);
+      time += i * opts.unit;
+    };
+
+    const gap = (i) => {
+      timings.push([0, currentTime + time]);
+      time += i * opts.fwUnit;
+    };
+
+    for (let i = 0; i <= morse.length; i++) {
+      if (morse[i] === opts.space) {
+        gap(7);
+      } else if (morse[i] === opts.dot) {
+        tone(1);
+        silence(1);
+      } else if (morse[i] === opts.dash) {
+        tone(3);
+        silence(1);
+      } else if (
+        (typeof morse[i + 1] !== 'undefined' && morse[i + 1] !== opts.space) &&
+        (typeof morse[i - 1] !== 'undefined' && morse[i - 1] !== opts.space)
+      ) {
+        gap(3);
+      }
     }
-    return result;
+
+    return [timings, time];
   }
 
   const floatTo16BitPCM = (output, offset, input) => {
@@ -237,107 +268,90 @@
     return view;
   }
 
-  let AudioContext = null;
-  let context = null;
-  let exporting = false;
-  let buffers = [];
-  let exportLength = 0;
 
+  
   const audio = (text, opts, morseString) => {
-
+    let AudioContext = null;
+    let OfflineAudioContext = null;
+    let buffer;
+    let context = null;
+    let offlineContext = null;
+    let source;
+    const options = getOptions(opts);
+    const morse = morseString || encode(text, opts);
+    const [gainValues, totalTime] = getGainTimings(morse, options);
+    
     if (AudioContext === null && typeof window !== 'undefined') {
       AudioContext = window.AudioContext || window.webkitAudioContext;
       context = new AudioContext();
+      source = context.createBufferSource();
+      source.connect(context.destination);
     }
 
-    const options = getOptions(opts);
-    const morse = morseString || encode(text, opts);
-    const oscillator = context.createOscillator();
-    const gainNode = context.createGain();
-    const scriptNode = context.createScriptProcessor(4096, 1, 1);
-
-    scriptNode.onaudioprocess = event => {
-      if (!exporting) return;
-      let channelData = event.inputBuffer.getChannelData(0);
-      exportLength += channelData.length;
-      buffers.push(channelData);
-    }
-
-    let timeout;
-    let t = context.currentTime;
-
-    oscillator.type = options.oscillator.type;
-    oscillator.frequency.value = options.oscillator.frequency;
-    oscillator.onended = options.oscillator.onended;
-
-    gainNode.gain.setValueAtTime(0, t);
-
-    const tone = (i) => {
-      gainNode.gain.setValueAtTime(1, t);
-      t += i * options.unit;
-    };
-
-    const silence = (i) => {
-      gainNode.gain.setValueAtTime(0, t);
-      t += i * options.unit;
-    };
-
-    const gap = (i) => {
-      gainNode.gain.setValueAtTime(0, t);
-      t += i * options.fwUnit;
-    };
-
-    for (let i = 0; i <= morse.length; i++) {
-      if (morse[i] === options.space) {
-        gap(7);
-      } else if (morse[i] === options.dot) {
-        tone(1);
-        silence(1);
-      } else if (morse[i] === options.dash) {
-        tone(3);
-        silence(1);
-      } else if (
-        (typeof morse[i + 1] !== 'undefined' && morse[i + 1] !== options.space) &&
-        (typeof morse[i - 1] !== 'undefined' && morse[i - 1] !== options.space)
-      ) {
-        gap(3);
+    if (OfflineAudioContext === null && typeof window !== 'undefined') {
+      OfflineAudioContext = window.OfflineAudioContext;
+      offlineContext = new OfflineAudioContext(1, 22050 * totalTime, 22050);
+      offlineContext.oncomplete = (e) => {
+        source.buffer = e.renderedBuffer;
       }
     }
 
-    oscillator.connect(gainNode);
-    gainNode.connect(context.destination);
+    const oscillator = offlineContext.createOscillator();
+    const gainNode = offlineContext.createGain();
 
-    const play = () => new Promise ((resolve) => {
-      oscillator.start(context.currentTime);
-      timeout = setTimeout(() => {
-        stop();
-        resolve();
-      }, (t - context.currentTime) * 1000);
-    });
+    oscillator.type = options.oscillator.type;
+    oscillator.frequency.value = options.oscillator.frequency;
+    
+    gainValues.forEach(([value, time]) => gainNode.gain.setValueAtTime(value, time));
+
+    oscillator.connect(gainNode);
+    gainNode.connect(offlineContext.destination);
+
+    oscillator.start(0);
+    let render = offlineContext.startRendering();
+    
+    source.onended = options.oscillator.onended;
+
+    let timeout;
+
+    const play = () => {
+      source.start(context.currentTime);
+      timeout = setTimeout(() => stop(), totalTime * 1000);
+    };
 
     const stop = () => {
       clearTimeout(timeout);
       timeout = 0;
-      oscillator.stop(0);
+      source.stop(0);
     };
 
-    const toWave = async () => {
-      exporting = true;
-      gainNode.disconnect(context.destination);
-      gainNode.connect(scriptNode);
-      await play();
-      exporting = false;
-      gainNode.disconnect(scriptNode);
-      gainNode.connect(context.destination);
-      const waveData = encodeWAV(context.sampleRate, mergeBuffers(buffers, exportLength));
+    const getWaveBlob = async () => {
+      await render;
+      const waveData = encodeWAV(offlineContext.sampleRate, source.buffer.getChannelData(0));
       const audioBlob = new Blob([waveData], { 'type': 'audio/wav' });
       return audioBlob;
+    }
+
+    const getWaveUrl = async () => {
+      const audioBlob = await getWaveBlob();
+      return URL.createObjectURL(audioBlob);
+    };
+
+    const exportWave = async () => {
+      let waveUrl = await getWaveUrl();
+      var anchor = document.createElement('a');
+      anchor.href = waveUrl;
+      anchor.target = '_blank';
+      anchor.download = 'morsify.wav';
+      anchor.click();
     };
 
     return {
       play,
       stop,
-      toWave,
+      getWaveBlob,
+      getWaveUrl,
+      exportWave,
       context,
       oscillator,
       gainNode
