@@ -232,6 +232,7 @@
     }
   }
 
+  // graciously borrowed from: https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js
   const encodeWAV = (sampleRate, samples) => {
     let buffer = new ArrayBuffer(44 + samples.length * 2);
     let view = new DataView(buffer);
@@ -302,6 +303,7 @@
     gainNode.connect(offlineContext.destination);
     source.onended = options.oscillator.onended;
 
+    // offline rendering as a promise inspired by: http://joesul.li/van/tale-of-no-clocks/
     let render = new Promise(resolve => {
       oscillator.start(0);
       offlineContext.startRendering();
@@ -313,7 +315,8 @@
     
     let timeout;
 
-    const play = () => {
+    const play = async () => {
+      await render;
       source.start(context.currentTime);
       timeout = setTimeout(() => stop(), totalTime * 1000);
     };
