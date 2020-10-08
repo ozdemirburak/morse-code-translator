@@ -268,12 +268,9 @@
     return view;
   }
 
-
-  
   const audio = (text, opts, morseString) => {
     let AudioContext = null;
     let OfflineAudioContext = null;
-    let buffer;
     let context = null;
     let offlineContext = null;
     let source;
@@ -291,9 +288,6 @@
     if (OfflineAudioContext === null && typeof window !== 'undefined') {
       OfflineAudioContext = window.OfflineAudioContext;
       offlineContext = new OfflineAudioContext(1, 22050 * totalTime, 22050);
-      offlineContext.oncomplete = (e) => {
-        source.buffer = e.renderedBuffer;
-      }
     }
 
     const oscillator = offlineContext.createOscillator();
@@ -306,12 +300,17 @@
 
     oscillator.connect(gainNode);
     gainNode.connect(offlineContext.destination);
-
-    oscillator.start(0);
-    let render = offlineContext.startRendering();
-    
     source.onended = options.oscillator.onended;
 
+    let render = new Promise(resolve => {
+      oscillator.start(0);
+      offlineContext.startRendering();
+      offlineContext.oncomplete = (e) => {
+        source.buffer = e.renderedBuffer;
+        resolve();
+      }
+    });
+    
     let timeout;
 
     const play = () => {
