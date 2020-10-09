@@ -1,10 +1,10 @@
 {
-  "name": "morsify",
-  "version": "2.4.0",
+  "name": "morse-decoder",
+  "version": "3.0.1",
   "description": "Morse code translator, Morse encoder and decoder which can also generate audio.",
   "keywords": [
-    "morsify",
     "morse",
+    "morsify",
     "morse alphabet",
     "morse audio",
     "morse characters",
@@ -29,11 +29,11 @@
     "شفرة مورس"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/ozdemirburak/morsify",
+  "homepage": "https://github.com/ozdemirburak/morse-decoder",
   "author": "Burak Özdemir (https://ozdemirburak.com)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ozdemirburak/morsify.git"
+    "url": "https://github.com/ozdemirburak/morse-decoder.git"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",
@@ -48,7 +48,7 @@
     "lodash": "^4.17.20",
     "mocha": "^6.2.2"
   },
-  "main": "./src/morsify.js",
+  "main": "./src/index.js",
   "files": [
     "LICENSE",
     "README.md",
@@ -58,7 +58,7 @@
   "scripts": {
     "test": "npm run lint && mocha",
     "test-cov": "istanbul cover _mocha",
-    "lint": "jshint ./src/morsify.js"
+    "lint": "jshint ./src/index.js"
   },
   "engines": {
     "node": ">=4.0.0"
