@@ -29,6 +29,9 @@ const characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {
 const audio = morsify.audio('SOS');
 audio.play(); // play audio
 audio.stop(); // stop audio
+audio.exportWave(); // download audio wave file (promise)
+const url = await audio.getWaveUrl(); // get audio wave url (promise)
+const blob = await audio.getWaveBlob(); // get audio wave blob (promise)
 ```
 
 Alternatively, you can use the library directly with including the source file.
@@ -45,6 +48,9 @@ Alternatively, you can use the library directly with including the source file.
     var gainNode = audio.gainNode; // GainNode
     audio.play(); // play audio
     audio.stop(); // stop audio
+    audio.exportWave(); // download audio wave file (promise)
+    var url = await audio.getWaveUrl(); // get audio wave url (promise)
+    var blob = await audio.getWaveBlob(); // get audio wave blob (promise)
 </script>
 ```
 
