@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "target": "ES2017"
+  },
+  "declaration": true,
+  "include": ["./src/**/*"],
+  "files": ["src/index.d.ts"]
+}

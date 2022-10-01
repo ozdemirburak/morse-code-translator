@@ -43,10 +43,12 @@
     "gulp-babel": "^8.0.0",
     "gulp-babel-minify": "^0.5.1",
     "gulp-concat": "^2.6.1",
+    "gulp-typescript": "^6.0.0-alpha.1",
     "istanbul": "^0.4.5",
     "jshint": "^2.12.0",
     "lodash": "^4.17.20",
-    "mocha": "^6.2.2"
+    "mocha": "^6.2.2",
+    "typescript": "^4.8.4"
   },
   "main": "./src/index.js",
   "files": [
