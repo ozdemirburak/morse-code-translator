@@ -1,6 +1,6 @@
-declare var exports;
-declare var module;
-declare var define;
+declare let exports;
+declare let module;
+declare let define;
 
 ;(((name, root, factory) => {
   if (typeof exports === 'object') {
@@ -43,17 +43,17 @@ declare var define;
     },
     '5': { // Cyrillic Alphabet => https://en.wikipedia.org/wiki/Russian_Morse_code
       'А': '01', 'Б': '1000', 'В': '011', 'Г': '110', 'Д': '100', 'Е': '0',
-      'Ж': '0001', 'З': '1100', 'И': '00', 'Й': '0111', 'К': '101','Л': '0100',
+      'Ж': '0001', 'З': '1100', 'И': '00', 'Й': '0111', 'К': '101', 'Л': '0100',
       'М': '11', 'Н': '10', 'О': '111', 'П': '0110', 'Р': '010', 'С': '000',
       'Т': '1', 'У': '001', 'Ф': '0010', 'Х': '0000', 'Ц': '1010', 'Ч': '1110',
       'Ш': '1111', 'Щ': '1101', 'Ъ': '11011', 'Ы': '1011', 'Ь': '1001', 'Э': '00100',
       'Ю': '0011', 'Я': '0101', 'Ї': '01110', 'Є': '00100', 'І': '00', 'Ґ': '110'
     },
     '6': { // Greek Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
-      'Α': '01', 'Β':'1000', 'Γ':'110', 'Δ':'100', 'Ε':'0', 'Ζ':'1100',
-      'Η':'0000', 'Θ':'1010', 'Ι': '00', 'Κ': '101', 'Λ': '0100', 'Μ': '11',
-      'Ν': '10', 'Ξ': '1001', 'Ο': '111', 'Π': '0110', 'Ρ': '010', 'Σ':'000',
-      'Τ':'1', 'Υ': '1011', 'Φ':'0010', 'Χ': '1111', 'Ψ': '1101', 'Ω':'011'
+      'Α': '01', 'Β': '1000', 'Γ': '110', 'Δ': '100', 'Ε': '0', 'Ζ': '1100',
+      'Η': '0000', 'Θ': '1010', 'Ι': '00', 'Κ': '101', 'Λ': '0100', 'Μ': '11',
+      'Ν': '10', 'Ξ': '1001', 'Ο': '111', 'Π': '0110', 'Ρ': '010', 'Σ': '000',
+      'Τ': '1', 'Υ': '1011', 'Φ': '0010', 'Χ': '1111', 'Ψ': '1101', 'Ω': '011'
     },
     '7': { // Hebrew Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
       'א': '01', 'ב': '1000', 'ג': '110', 'ד': '100', 'ה': '111', 'ו': '0',
@@ -65,27 +65,27 @@ declare var define;
       'ا': '01', 'ب': '1000', 'ت': '1', 'ث': '1010', 'ج': '0111', 'ح': '0000',
       'خ': '111', 'د': '100', 'ذ': '1100', 'ر': '010', 'ز': '1110', 'س': '000',
       'ش': '1111', 'ص': '1001', 'ض': '0001', 'ط': '001', 'ظ': '1011', 'ع': '0101',
-      'غ': '110', 'ف': '0010', 'ق': '1101', 'ك': '101', 'ل': '0100', 'م':	'11',
-      'ن':	'10', 'ه':	'00100', 'و':	'011', 'ي':	'00', 'ﺀ':	'0'
+      'غ': '110', 'ف': '0010', 'ق': '1101', 'ك': '101', 'ل': '0100', 'م': '11',
+      'ن': '10', 'ه': '00100', 'و': '011', 'ي': '00', 'ﺀ': '0'
     },
     '9': { // Persian Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
       'ا': '01', 'ب': '1000', 'پ': '0110', 'ت': '1', 'ث': '1010', 'ج': '0111',
-      'چ': '1110', 'ح': '0000', 'خ' : '1001', 'د': '100', 'ذ': '0001', 'ر': '010',
+      'چ': '1110', 'ح': '0000', 'خ': '1001', 'د': '100', 'ذ': '0001', 'ر': '010',
       'ز': '1100', 'ژ': '110', 'س': '000', 'ش': '1111', 'ص': '0101', 'ض': '00100',
       'ط': '001', 'ظ': '1011', 'ع': '111', 'غ': '0011', 'ف': '0010', 'ق': '111000',
       'ک': '101', 'گ': '1101', 'ل': '0100', 'م': '11', 'ن': '10', 'و': '011',
       'ه': '0', 'ی': '00'
     },
     '10': { // Japanese Alphabet => https://ja.wikipedia.org/wiki/%E3%83%A2%E3%83%BC%E3%83%AB%E3%82%B9%E7%AC%A6%E5%8F%B7#%E5%92%8C%E6%96%87%E3%83%A2%E3%83%BC%E3%83%AB%E3%82%B9%E7%AC%A6%E5%8F%B7
-      'ア': '11011', 'カ': '0100', 'サ': '10101', 'タ': '10',	'ナ': '010', 'ハ': '1000',
+      'ア': '11011', 'カ': '0100', 'サ': '10101', 'タ': '10', 'ナ': '010', 'ハ': '1000',
       'マ': '1001', 'ヤ': '011', 'ラ': '000', 'ワ': '101', 'イ': '01', 'キ': '10100',
       'シ': '11010', 'チ': '0010', 'ニ': '1010', 'ヒ': '11001', 'ミ': '00101', 'リ': '110',
       'ヰ': '01001', 'ウ': '001', 'ク': '0001', 'ス': '11101', 'ツ': '0110', 'ヌ': '0000',
       'フ': '1100', 'ム': '1', 'ユ': '10011', 'ル': '10110', 'ン': '01010', 'エ': '10111',
       'ケ': '1011', 'セ': '01110', 'テ': '01011', 'ネ': '1101', 'ヘ': '0', 'メ': '10001',
-      'レ': '111', 'ヱ': '01100', 'オ': '01000', 'コ': '1111', 'ソ':'1110', 'ト': '00100',
+      'レ': '111', 'ヱ': '01100', 'オ': '01000', 'コ': '1111', 'ソ': '1110', 'ト': '00100',
       'ノ': '0011', 'ホ': '100', 'モ': '10010', 'ヨ': '11', 'ロ': '0101', 'ヲ': '0111',
-      '゛': '00', '゜': '00110', '。': '010100',  'ー': '01101', '、': '010101',
+      '゛': '00', '゜': '00110', '。': '010100', 'ー': '01101', '、': '010101',
       '（': '101101', '）': '010010'
     },
     '11': { // Korean Alphabet => https://en.wikipedia.org/wiki/SKATS
@@ -94,17 +94,17 @@ declare var define;
       'ㅍ': '111', 'ㅎ': '0111', 'ㅏ': '0', 'ㅑ': '00', 'ㅓ': '1', 'ㅕ': '000',
       'ㅗ': '01', 'ㅛ': '10', 'ㅜ': '0000', 'ㅠ': '010', 'ㅡ': '100', 'ㅣ': '001'
     },
-    '12' : { // Thai Alphabet => https://th.wikipedia.org/wiki/รหัสมอร์ส
+    '12': { // Thai Alphabet => https://th.wikipedia.org/wiki/รหัสมอร์ส
       'ก': '110', 'ข': '1010', 'ค': '101', 'ง': '10110', 'จ': '10010',
       'ฉ': '1111', 'ช': '1001', 'ซ': '1100', 'ญ': '0111', 'ด': '100',
       'ต': '1', 'ถ': '10100', 'ท': '10011', 'น': '10', 'บ': '1000',
-      'ป': '0110', 'ผ':'1101', 'ฝ': '10101', 'พ': '01100', 'ฟ': '0010',
+      'ป': '0110', 'ผ': '1101', 'ฝ': '10101', 'พ': '01100', 'ฟ': '0010',
       'ม': '11', 'ย': '1011', 'ร': '010', 'ล': '0100', 'ว': '011',
       'ส': '000', 'ห': '0000', 'อ': '10001', 'ฮ': '11011', 'ฤ': '01011',
       'ะ': '01000', 'า': '01', 'ิ': '00100', 'ี': '00', 'ึ': '00110',
       'ื': '0011', 'ุ': '00101', 'ู': '1110', 'เ': '0', 'แ': '0101',
       'ไ': '01001', 'โ': '111', 'ำ': '00010', '่': '001', '้': '0001',
-      '๊': '11000', '๋':'01010',  'ั': '01101', '็': '11100', '์': '11001',
+      '๊': '11000', '๋': '01010', 'ั': '01101', '็': '11100', '์': '11001',
       'ๆ': '10111', 'ฯ': '11010'
     }
   };
@@ -118,14 +118,14 @@ declare var define;
         mapped[set][key] = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
       }
     }
-    if (usePriority !== true) {
+    if (!usePriority) {
       delete mapped[0];
     }
     return mapped;
   };
 
   const swapCharacters = (options: Options) => {
-    const swapped: { [key:string]: string } = {};
+    const swapped: { [key: string]: string } = {};
     const mappedCharacters = getCharacters(options, true);
     for (const set in mappedCharacters) {
       for (const key in mappedCharacters[set]) {
@@ -137,7 +137,7 @@ declare var define;
     return swapped;
   };
 
-  const getOptions = (options: Partial<Options>) : Options => {
+  const getOptions = (options: Partial<Options>): Options => {
     options = options || {};
     options.oscillator = options.oscillator || {};
     options = {
@@ -151,8 +151,8 @@ declare var define;
       fwUnit: options.fwUnit || options.unit || 0.08, // Farnsworth unit to control intercharacter and interword gaps
       oscillator: {
         type: options.oscillator.type || 'sine', // sine, square, sawtooth, triangle
-        frequency: options.oscillator.frequency || 500,  // value in hertz
-        onended: options.oscillator.onended || null  // event that fires when the tone has stopped playing
+        frequency: options.oscillator.frequency || 500, // value in hertz
+        onended: options.oscillator.onended || null // event that fires when the tone has stopped playing
       }
     };
     characters[1][options.separator] = options.space;
@@ -162,8 +162,8 @@ declare var define;
 
   const encode = (text: string, opts: Options) => {
     const options = getOptions(opts);
-    return [...text.replace(/\s+/g, options.separator).trim().toLocaleUpperCase()].map(function(character) {
-      for (let set in characters) {
+    return [...text.replace(/\s+/g, options.separator).trim().toLocaleUpperCase()].map(function (character) {
+      for (const set in characters) {
         if (typeof characters[set] !== 'undefined' && typeof characters[set][character] !== 'undefined') {
           return characters[set][character];
         }
@@ -173,8 +173,9 @@ declare var define;
   };
 
   const decode = (morse: string, opts: Options) => {
-    const options = getOptions(opts), swapped = swapCharacters(options);
-    return morse.replace(/\s+/g, options.separator).trim().split(options.separator).map(function(characters) {
+    const options = getOptions(opts);
+    const swapped = swapCharacters(options);
+    return morse.replace(/\s+/g, options.separator).trim().split(options.separator).map(function (characters) {
       if (typeof swapped[characters] !== 'undefined') {
         return swapped[characters];
       }
@@ -183,7 +184,7 @@ declare var define;
   };
 
   const getGainTimings = (morse: string, opts: Options, currentTime = 0): [[[number, number]?], number] => {
-    let timings: [[number, number]?] = [];
+    const timings: [[number, number]?] = [];
     let time = 0;
 
     timings.push([0, time]);
@@ -224,10 +225,10 @@ declare var define;
   };
 
   // Source: https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js#L155
-  const encodeWAV = (sampleRate, samples) => {
-    let buffer = new ArrayBuffer(44 + samples.length * 2);
-    let view = new DataView(buffer);
-    const writeString = (view, offset, string) => {
+  const encodeWAV = (sampleRate: number, samples: Float32Array) => {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+    const writeString = (view: DataView, offset: number, string: string) => {
       for (let i = 0; i < string.length; i++) {
         view.setUint8(offset + i, string.charCodeAt(i));
       }
@@ -259,9 +260,9 @@ declare var define;
     // data chunk length
     view.setUint32(40, samples.length * 2, true);
     // to PCM
-    const floatTo16BitPCM = (output, offset, input) => {
+    const floatTo16BitPCM = (output: DataView, offset: number, input: Float32Array) => {
       for (let i = 0; i < input.length; i++, offset += 2) {
-        let s = Math.max(-1, Math.min(1, input[i]));
+        const s = Math.max(-1, Math.min(1, input[i]));
         output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
       }
     };
@@ -312,7 +313,7 @@ declare var define;
     source.onended = options.oscillator.onended;
 
     // Inspired by: http://joesul.li/van/tale-of-no-clocks/
-    let render = new Promise<void>(resolve => {
+    const render = new Promise<void>(resolve => {
       oscillator.start(0);
       offlineContext.startRendering();
       offlineContext.oncomplete = (e) => {
@@ -347,8 +348,8 @@ declare var define;
     };
 
     const exportWave = async (filename) => {
-      let waveUrl = await getWaveUrl();
-      let anchor = document.createElement('a');
+      const waveUrl = await getWaveUrl();
+      const anchor = document.createElement('a');
       anchor.href = waveUrl;
       anchor.target = '_blank';
       anchor.download = filename || 'morse.wav';

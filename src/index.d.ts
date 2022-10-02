@@ -3,7 +3,7 @@ interface Window {
   webkitOfflineAudioContext: typeof OfflineAudioContext
 }
 
-interface Characters { [key: string]: { [key:string ]: string } }
+interface Characters { [key: string]: { [key: string ]: string } }
 
 interface Oscillator {
   type?: OscillatorType;
