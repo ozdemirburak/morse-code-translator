@@ -63,6 +63,7 @@
     "dist"
   ],
   "scripts": {
+    "build": "gulp",
     "test": "npm run lint && mocha",
     "test-cov": "istanbul cover _mocha",
     "lint": "eslint ./src/index.ts"
