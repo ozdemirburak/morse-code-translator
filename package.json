@@ -37,13 +37,13 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.5.0",
-    "@typescript-eslint/eslint-plugin": "^5.38.1",
+    "@typescript-eslint/eslint-plugin": "^5.39.0",
     "eslint": "^8.24.0",
     "eslint-config-standard-with-typescript": "^23.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.3.0",
     "eslint-plugin-promise": "^6.0.1",
-    "mocha": "^6.2.2",
+    "mocha": "10.0.0",
     "nyc": "^15.1.0",
     "rollup": "^2.79.1",
     "typescript": "^4.8.4"
