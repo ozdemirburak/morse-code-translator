@@ -36,23 +36,16 @@
     "url": "https://github.com/ozdemirburak/morse-decoder.git"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.6",
-    "@babel/preset-env": "^7.11.5",
+    "@rollup/plugin-typescript": "^8.5.0",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
-    "coveralls": "^3.0.9",
     "eslint": "^8.24.0",
     "eslint-config-standard-with-typescript": "^23.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.3.0",
     "eslint-plugin-promise": "^6.0.1",
-    "gulp": "^4.0.2",
-    "gulp-babel": "^8.0.0",
-    "gulp-babel-minify": "^0.5.1",
-    "gulp-concat": "^2.6.1",
-    "gulp-typescript": "^6.0.0-alpha.1",
-    "istanbul": "^0.4.5",
-    "lodash": "^4.17.20",
     "mocha": "^6.2.2",
+    "nyc": "^15.1.0",
+    "rollup": "^2.79.1",
     "typescript": "^4.8.4"
   },
   "main": "./src/index.js",
@@ -63,9 +56,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "gulp",
-    "test": "npm run lint && mocha",
-    "test-cov": "istanbul cover _mocha",
+    "build": "rollup -c",
+    "build-rel": "rollup -c -p rollup-plugin-terser -o ./dist/morse-decoder.min.js",
+    "tsc": "tsc --noEmit",
+    "test": "mocha",
+    "test-cov": "nyc mocha",
     "lint": "eslint ./src/index.ts"
   },
   "engines": {

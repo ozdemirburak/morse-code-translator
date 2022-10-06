@@ -12,9 +12,9 @@ declare let define;
   } else if (typeof define === 'function' && define.amd) {
     define(factory);
   } else if (root !== undefined) {
-    (root as any)[name] = factory();
+    root[name] = factory();
   }
-})('morse-decoder', this, () => {
+})('morse-decoder', globalThis, () => {
   'use strict';
 
   const encode = (text: string, opts: Options) => {

@@ -1,4 +1,4 @@
-const getOptions = (opts: Partial<Options>): Options => {
+const getOptions = (opts: Partial<Options> = {}): Options => {
   const options: Options = {
     ...opts,
     dash: opts.dash || '-',
@@ -11,9 +11,9 @@ const getOptions = (opts: Partial<Options>): Options => {
     fwUnit: opts.fwUnit || opts.unit || 0.08, // Farnsworth unit to control intercharacter and interword gaps
     oscillator: {
       ...opts.oscillator,
-      type: opts.oscillator.type || 'sine', // sine, square, sawtooth, triangle
-      frequency: opts.oscillator.frequency || 500, // value in hertz
-      onended: opts.oscillator.onended || null // event that fires when the tone has stopped playing
+      type: opts.oscillator?.type || 'sine', // sine, square, sawtooth, triangle
+      frequency: opts.oscillator?.frequency || 500, // value in hertz
+      onended: opts.oscillator?.onended || null // event that fires when the tone has stopped playing
     }
   };
   return options;
