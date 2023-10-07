@@ -25,20 +25,22 @@ const getGainTimings = (morse: string, opts: Options, currentTime = 0): [[[numbe
     time += i * fwUnit;
   };
 
-  for (let i = 0; i <= morse.length; i++) {
+  for (let i = 0, addSilence = false; i <= morse.length; i++) {
     if (morse[i] === opts.space) {
       gap(7);
+      addSilence = false;
     } else if (morse[i] === opts.dot) {
+      if (addSilence) silence(1); else addSilence = true;
       tone(1);
-      silence(1);
     } else if (morse[i] === opts.dash) {
+      if (addSilence) silence(1); else addSilence = true;
       tone(3);
-      silence(1);
     } else if (
       (typeof morse[i + 1] !== 'undefined' && morse[i + 1] !== opts.space) &&
       (typeof morse[i - 1] !== 'undefined' && morse[i - 1] !== opts.space)
     ) {
       gap(3);
+      addSilence = false;
     }
   }
 
