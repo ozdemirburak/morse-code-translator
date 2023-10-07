@@ -11,7 +11,7 @@ const getGainTimings = (morse: string, opts: Options, currentTime = 0): [[[numbe
   timings.push([0, time]);
 
   const tone = (i: number) => {
-    timings.push([1, currentTime + time]);
+    timings.push([1 * (opts.volume / 100.0), currentTime + time]);
     time += i * unit;
   };
 
