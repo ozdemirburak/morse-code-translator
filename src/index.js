@@ -248,7 +248,7 @@ const audio = (morse, options) => {
     const play = async () => {
         await render;
         source.start(context.currentTime);
-        timeout = setTimeout(() => stop(), totalTime * 1000);
+        timeout = setTimeout(() => { stop(); }, totalTime * 1000);
     };
     const stop = () => {
         clearTimeout(timeout);

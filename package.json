@@ -36,18 +36,19 @@
     "url": "https://github.com/ozdemirburak/morse-decoder.git"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^8.5.0",
-    "@typescript-eslint/eslint-plugin": "^5.39.0",
-    "eslint": "^8.24.0",
-    "eslint-config-standard-with-typescript": "^23.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.3.0",
-    "eslint-plugin-promise": "^6.0.1",
-    "mocha": "10.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "eslint": "^8.51.0",
+    "eslint-config-standard-with-typescript": "^39.1.0",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-n": "^16.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "mocha": "10.2.0",
     "nyc": "^15.1.0",
-    "rollup": "^2.79.1",
-    "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.8.4"
+    "rollup": "^4.0.2",
+    "tslib": "^2.6.2",
+    "typescript": "^5.2.2"
   },
   "main": "./src/index.js",
   "files": [
@@ -58,7 +59,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "build-rel": "rollup -c -p rollup-plugin-terser -o ./dist/morse-decoder.min.js",
+    "build-rel": "rollup -c -p @rollup/plugin-terser -o ./dist/morse-decoder.min.js",
     "tsc": "tsc --noEmit",
     "test": "mocha",
     "test-cov": "nyc mocha",

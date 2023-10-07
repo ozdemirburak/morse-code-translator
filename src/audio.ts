@@ -140,7 +140,7 @@ const audio = (morse: string, options: Options) => {
   const play = async () => {
     await render;
     source.start(context.currentTime);
-    timeout = setTimeout(() => stop(), totalTime * 1000);
+    timeout = setTimeout(() => { stop() }, totalTime * 1000);
   };
 
   const stop = () => {
