@@ -125,26 +125,31 @@ const swapCharacters = (options) => {
 
 const getOptions = (opts = {}) => {
     var _a, _b, _c;
-    const options = Object.assign(Object.assign({}, opts), { dash: opts.dash || '-', dot: opts.dot || '.', space: opts.space || '/', separator: opts.separator || ' ', invalid: opts.invalid || '#', priority: opts.priority || 1, unit: opts.unit || 0.08, fwUnit: opts.fwUnit || opts.unit || 0.08, oscillator: Object.assign(Object.assign({}, opts.oscillator), { type: ((_a = opts.oscillator) === null || _a === void 0 ? void 0 : _a.type) || 'sine', frequency: ((_b = opts.oscillator) === null || _b === void 0 ? void 0 : _b.frequency) || 500, onended: ((_c = opts.oscillator) === null || _c === void 0 ? void 0 : _c.onended) || null // event that fires when the tone has stopped playing
+    const options = Object.assign(Object.assign({}, opts), { dash: opts.dash || '-', dot: opts.dot || '.', space: opts.space || '/', separator: opts.separator || ' ', invalid: opts.invalid || '#', priority: opts.priority || 1, wpm: opts.wpm, unit: opts.unit || 0.08, fwUnit: opts.fwUnit || opts.unit || 0.08, oscillator: Object.assign(Object.assign({}, opts.oscillator), { type: ((_a = opts.oscillator) === null || _a === void 0 ? void 0 : _a.type) || 'sine', frequency: ((_b = opts.oscillator) === null || _b === void 0 ? void 0 : _b.frequency) || 500, onended: ((_c = opts.oscillator) === null || _c === void 0 ? void 0 : _c.onended) || null // event that fires when the tone has stopped playing
          }) });
     return options;
 };
 
 const getGainTimings = (morse, opts, currentTime = 0) => {
     const timings = [];
+    let { unit, fwUnit } = opts;
     let time = 0;
+    if (opts.wpm) {
+        // wpm mode uses standardised units
+        unit = fwUnit = 60 / (opts.wpm * 50);
+    }
     timings.push([0, time]);
     const tone = (i) => {
         timings.push([1, currentTime + time]);
-        time += i * opts.unit;
+        time += i * unit;
     };
     const silence = (i) => {
         timings.push([0, currentTime + time]);
-        time += i * opts.unit;
+        time += i * unit;
     };
     const gap = (i) => {
         timings.push([0, currentTime + time]);
-        time += i * opts.fwUnit;
+        time += i * fwUnit;
     };
     for (let i = 0; i <= morse.length; i++) {
         if (morse[i] === opts.space) {

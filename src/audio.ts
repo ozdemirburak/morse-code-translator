@@ -1,22 +1,28 @@
 const getGainTimings = (morse: string, opts: Options, currentTime = 0): [[[number, number]?], number] => {
   const timings: [[number, number]?] = [];
+  let {unit, fwUnit} = opts;
   let time = 0;
+
+  if (opts.wpm) {
+    // wpm mode uses standardised units
+    unit = fwUnit = 60 / (opts.wpm * 50)
+  }
 
   timings.push([0, time]);
 
   const tone = (i: number) => {
     timings.push([1, currentTime + time]);
-    time += i * opts.unit;
+    time += i * unit;
   };
 
   const silence = (i: number) => {
     timings.push([0, currentTime + time]);
-    time += i * opts.unit;
+    time += i * unit;
   };
 
   const gap = (i: number) => {
     timings.push([0, currentTime + time]);
-    time += i * opts.fwUnit;
+    time += i * fwUnit;
   };
 
   for (let i = 0; i <= morse.length; i++) {

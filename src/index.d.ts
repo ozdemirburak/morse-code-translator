@@ -18,7 +18,8 @@ interface Options {
   separator: string;
   invalid: string;
   priority: number;
-  unit: number;
-  fwUnit: number;
+  wpm?: number;
+  unit?: number;
+  fwUnit?: number;
   oscillator: Oscillator
 }
