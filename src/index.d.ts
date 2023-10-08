@@ -18,7 +18,7 @@ interface Options {
   separator: string;
   invalid: string;
   priority: number;
-  wpm: number;
+  wpm?: number;
   unit: number;
   fwUnit: number;
   volume: number;
