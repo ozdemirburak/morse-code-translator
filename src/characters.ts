@@ -119,7 +119,7 @@ const getMappedCharacters = (options: Options, usePriority: boolean) => {
 };
 
 const swapCharacters = (options: Options) => {
-  const swapped: { [key: string]: string } = {};
+  const swapped: Record<string, string> = {};
   const mappedCharacters = getMappedCharacters(options, true);
   for (const set in mappedCharacters) {
     for (const key in mappedCharacters[set]) {
