@@ -20,7 +20,7 @@ $ yarn add morse-decoder
 ```
 
 ## Usage
-
+### Common JS
 ```js
 const morse = require('morse-decoder');
 const encoded = morse.encode('SOS'); // ... --- ...
@@ -28,11 +28,23 @@ const decoded = morse.decode('... --- ...'); // SOS
 const characters = morse.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
 const audio = morse.audio('SOS');
 audio.play(); // play audio
-audio.stop(); // stop audio
+audio.stop(); // stop audio (cannot resume)
 audio.exportWave(); // download audio wave file (promise)
 const url = await audio.getWaveUrl(); // get audio wave url (promise)
 const blob = await audio.getWaveBlob(); // get audio wave blob (promise)
 ```
+### Browser
+Morse decoder exports a global object named 'morse-decoder';
+```js
+const morse = window['morse-decoder']
+const audioElement = document.querySelector('audio');
+const helloAudio = morse.audio('Hello world');
+helloAudio.getWaveUrl().then((url) => {
+    document.querySelector('#morse')
+    .setAttribute('src', url);
+});
+```
+
 
 ### Options and localization
 
@@ -63,8 +75,10 @@ const hebrew = morse.decode('.. ––– . –––', { dash: '–', dot: '.',
 const japanese = morse.encode('NEWS', { priority: 10, dash: '－', dot: '・', separator: '　' }); // －・　・　・－－　・・・
 const characters = morse.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}}
 const arabicAudio = morse.audio('البراق', { // generates the Morse .- .-.. -... .-. .- --.- then generates the audio from it
+  wpm: 18, // sets the wpm based on the Paris method, note that setting this will override and set the unit and fwUnits accordingly
   unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
   fwUnit: 0.1, // period of one Farnsworth unit to control intercharacter and interword gaps
+  volume: 100, // the volume in percent (0-100)
   oscillator: {
     type: 'sine', // sine, square, sawtooth, triangle
     frequency: 500,  // value in hertz

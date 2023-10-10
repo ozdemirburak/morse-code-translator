@@ -7,8 +7,10 @@ const getOptions = (opts: Partial<Options> = {}): Options => {
     separator: opts.separator || ' ',
     invalid: opts.invalid || '#',
     priority: opts.priority || 1,
+    wpm: opts.wpm, // words per minute - PARIS method used in favour of unit/fwUnit options
     unit: opts.unit || 0.08, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
     fwUnit: opts.fwUnit || opts.unit || 0.08, // Farnsworth unit to control intercharacter and interword gaps
+    volume: opts.volume || 100,
     oscillator: {
       ...opts.oscillator,
       type: opts.oscillator?.type || 'sine', // sine, square, sawtooth, triangle

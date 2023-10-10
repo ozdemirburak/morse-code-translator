@@ -1,38 +1,46 @@
 const getGainTimings = (morse: string, opts: Options, currentTime = 0): [[[number, number]?], number] => {
   const timings: [[number, number]?] = [];
+  let {unit, fwUnit} = opts;
   let time = 0;
+
+  if (opts.wpm) {
+    // wpm mode uses standardised units
+    unit = fwUnit = 60 / (opts.wpm * 50)
+  }
 
   timings.push([0, time]);
 
   const tone = (i: number) => {
-    timings.push([1, currentTime + time]);
-    time += i * opts.unit;
+    timings.push([1 * (opts.volume / 100.0), currentTime + time]);
+    time += i * unit;
   };
 
   const silence = (i: number) => {
     timings.push([0, currentTime + time]);
-    time += i * opts.unit;
+    time += i * unit;
   };
 
   const gap = (i: number) => {
     timings.push([0, currentTime + time]);
-    time += i * opts.fwUnit;
+    time += i * fwUnit;
   };
 
-  for (let i = 0; i <= morse.length; i++) {
+  for (let i = 0, addSilence = false; i <= morse.length; i++) {
     if (morse[i] === opts.space) {
       gap(7);
+      addSilence = false;
     } else if (morse[i] === opts.dot) {
+      if (addSilence) silence(1); else addSilence = true;
       tone(1);
-      silence(1);
     } else if (morse[i] === opts.dash) {
+      if (addSilence) silence(1); else addSilence = true;
       tone(3);
-      silence(1);
     } else if (
       (typeof morse[i + 1] !== 'undefined' && morse[i + 1] !== opts.space) &&
       (typeof morse[i - 1] !== 'undefined' && morse[i - 1] !== opts.space)
     ) {
       gap(3);
+      addSilence = false;
     }
   }
 
@@ -140,7 +148,7 @@ const audio = (morse: string, options: Options) => {
   const play = async () => {
     await render;
     source.start(context.currentTime);
-    timeout = setTimeout(() => stop(), totalTime * 1000);
+    timeout = setTimeout(() => { stop() }, totalTime * 1000);
   };
 
   const stop = () => {
