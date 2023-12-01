@@ -1,6 +1,6 @@
 {
   "name": "morse-decoder",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Morse code translator and decoder, which can also play audio.",
   "keywords": [
     "morse",

@@ -94,9 +94,11 @@ arabicAudio.play(); // will start playing Morse audio
 arabicAudio.stop(); // will stop playing Morse audio
 ```
 
-## Contributing and Known Issues
+## Contributions
 
-Contributions are welcome.
+[morse-decoder](https://github.com/ozdemirburak/morse-decoder) has been developed 
+with extensive feedback and contributions from [numerous developers](https://github.com/ozdemirburak/morse-decoder/graphs/contributors).
+Special thanks to [Chris Jones](https://github.com/chris--jones), who added many great features.
 
 ## Generating Minified Files
 
@@ -111,6 +113,7 @@ $ npm run build-rel
 ```
 
 ## License
+
 The MIT License (MIT). Please see [License File](LICENSE) for more information.
 
   [npm-version]: https://img.shields.io/npm/v/morse-decoder.svg?style=flat-square
