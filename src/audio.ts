@@ -110,21 +110,26 @@ const audio = (morse: string, options: Options) => {
   const [gainValues, totalTime] = getGainTimings(morse, options);
 
   if (AudioContext === null && typeof window !== 'undefined') {
-    AudioContext = window.AudioContext || window.webkitAudioContext;
+    AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     context = new AudioContext();
-    source = context.createBufferSource();
-    source.connect(context.destination);
   }
 
   if (OfflineAudioContext === null && typeof window !== 'undefined') {
-    OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    OfflineAudioContext = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
     offlineContext = new OfflineAudioContext(1, 44100 * totalTime, 44100);
   }
+
+  if (!context || !offlineContext) {
+    throw new Error('Web Audio API is not supported in this browser');
+  }
+
+  source = context.createBufferSource();
+  source.connect(context.destination);
 
   const oscillator = offlineContext.createOscillator();
   const gainNode = offlineContext.createGain();
 
-  oscillator.type = options.oscillator.type;
+  oscillator.type = options.oscillator.type as OscillatorType;
   oscillator.frequency.value = options.oscillator.frequency;
 
   gainValues.forEach(([value, time]) => gainNode.gain.setValueAtTime(value, time));

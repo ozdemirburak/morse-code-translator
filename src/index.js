@@ -233,13 +233,16 @@ const audio = (morse, options) => {
     if (AudioContext === null && typeof window !== 'undefined') {
         AudioContext = window.AudioContext || window.webkitAudioContext;
         context = new AudioContext();
-        source = context.createBufferSource();
-        source.connect(context.destination);
     }
     if (OfflineAudioContext === null && typeof window !== 'undefined') {
         OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
         offlineContext = new OfflineAudioContext(1, 44100 * totalTime, 44100);
     }
+    if (!context || !offlineContext) {
+        throw new Error('Web Audio API is not supported in this browser');
+    }
+    source = context.createBufferSource();
+    source.connect(context.destination);
     const oscillator = offlineContext.createOscillator();
     const gainNode = offlineContext.createGain();
     oscillator.type = options.oscillator.type;
@@ -307,7 +310,7 @@ const audio = (morse, options) => {
     else if (root !== undefined) {
         root[name] = factory();
     }
-})('morse-decoder', globalThis, () => {
+})('morse-code-translator', globalThis, () => {
     const encode = (text, opts) => {
         const options = getOptions(opts);
         const characters = getCharacters(options);
