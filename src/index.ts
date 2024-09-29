@@ -14,7 +14,7 @@ declare let define;
   } else if (root !== undefined) {
     root[name] = factory();
   }
-})('morse-decoder', globalThis, () => {
+})('morse-code-translator', globalThis, () => {
   'use strict';
 
   const encode = (text: string, opts: Options) => {
