@@ -94,37 +94,16 @@ const encodeWAV = (sampleRate: number, samples: Float32Array) => {
 };
 
 const audio = (morse: string, options: Options) => {
-  let AudioContext: {
-    new(contextOptions?: AudioContextOptions): AudioContext;
-    prototype: AudioContext;
-  } = null;
-  let OfflineAudioContext: {
-    new(contextOptions: OfflineAudioContextOptions): OfflineAudioContext;
-    new(numberOfChannels: number, length: number, sampleRate: number): OfflineAudioContext;
-    prototype: OfflineAudioContext;
-  } = null;
-  let context: AudioContext = null;
-  let offlineContext: OfflineAudioContext = null;
-  let source: AudioBufferSourceNode;
+  let AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  let OfflineAudioContextClass = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
 
-  const [gainValues, totalTime] = getGainTimings(morse, options);
-
-  if (AudioContext === null && typeof window !== 'undefined') {
-    AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    context = new AudioContext();
-  }
-
-  if (OfflineAudioContext === null && typeof window !== 'undefined') {
-    OfflineAudioContext = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
-    offlineContext = new OfflineAudioContext(1, 44100 * totalTime, 44100);
-  }
-
-  if (!context || !offlineContext) {
+  if (!AudioContextClass || !OfflineAudioContextClass) {
     throw new Error('Web Audio API is not supported in this browser');
   }
 
-  source = context.createBufferSource();
-  source.connect(context.destination);
+  const context = new AudioContextClass();
+  const [gainValues, totalTime] = getGainTimings(morse, options);
+  const offlineContext = new OfflineAudioContextClass(1, 44100 * totalTime, 44100);
 
   const oscillator = offlineContext.createOscillator();
   const gainNode = offlineContext.createGain();
@@ -136,15 +115,26 @@ const audio = (morse: string, options: Options) => {
 
   oscillator.connect(gainNode);
   gainNode.connect(offlineContext.destination);
-  source.onended = options.oscillator.onended;
 
-  // Inspired by: http://joesul.li/van/tale-of-no-clocks/
-  const render = new Promise<void>(resolve => {
+  let source: AudioBufferSourceNode;
+
+  // Render the audio buffer
+  const render = new Promise<void>((resolve, reject) => {
     oscillator.start(0);
     offlineContext.startRendering();
     offlineContext.oncomplete = (e) => {
-      source.buffer = e.renderedBuffer;
-      resolve();
+      try {
+        source = context.createBufferSource();
+        source.buffer = e.renderedBuffer;
+        source.connect(context.destination);
+        source.onended = options.oscillator.onended;
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    };
+    offlineContext.onerror = (err) => {
+      reject(err);
     };
   });
 
@@ -152,20 +142,24 @@ const audio = (morse: string, options: Options) => {
 
   const play = async () => {
     await render;
+    if (context.state === 'suspended') {
+      await context.resume();
+    }
     source.start(context.currentTime);
-    timeout = setTimeout(() => { stop() }, totalTime * 1000);
+    timeout = window.setTimeout(() => { stop(); }, totalTime * 1000);
   };
 
   const stop = () => {
     clearTimeout(timeout);
-    timeout = 0;
-    source.stop(0);
+    if (source) {
+      source.stop(0);
+    }
   };
 
   const getWaveBlob = async () => {
     await render;
     const waveData = encodeWAV(offlineContext.sampleRate, source.buffer.getChannelData(0));
-    return new Blob([waveData], { 'type': 'audio/wav' });
+    return new Blob([waveData], { type: 'audio/wav' });
   };
 
   const getWaveUrl = async () => {
@@ -173,7 +167,7 @@ const audio = (morse: string, options: Options) => {
     return URL.createObjectURL(audioBlob);
   };
 
-  const exportWave = async (filename) => {
+  const exportWave = async (filename: string) => {
     const waveUrl = await getWaveUrl();
     const anchor = document.createElement('a');
     anchor.href = waveUrl;
