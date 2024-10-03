@@ -1,6 +1,6 @@
 {
   "name": "@ozdemirburak/morse-code-translator",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "description": "Morse code translator helps you convert text to Morse code and vice versa, with the option to play Morse code audio.",
   "keywords": [
     "morse",
