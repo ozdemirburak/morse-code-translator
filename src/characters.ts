@@ -1,3 +1,5 @@
+import type { Characters, Options } from './types.js';
+
 const baseCharacters: Characters = {
   '1': { // Latin => https://en.wikipedia.org/wiki/Morse_code
     'A': '01', 'B': '1000', 'C': '1010', 'D': '100', 'E': '0', 'F': '0010',
@@ -109,8 +111,11 @@ const getMappedCharacters = (options: Options, usePriority: boolean) => {
   const characters = getCharacters(options);
   for (const set in characters) {
     mapped[set] = {};
-    for (const key in characters[set]) {
-      mapped[set][key] = characters[set][key].replace(/0/g, options.dot).replace(/1/g, options.dash);
+    const charSet = characters[set as keyof typeof characters];
+    if (charSet) {
+      for (const key in charSet) {
+        mapped[set][key] = charSet[key].replace(/0/g, options.dot).replace(/1/g, options.dash);
+      }
     }
   }
   if (!usePriority) {

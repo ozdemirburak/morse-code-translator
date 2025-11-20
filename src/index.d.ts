@@ -24,3 +24,14 @@ interface Options {
   volume: number;
   oscillator: Oscillator
 }
+
+interface AudioResult {
+  play: () => Promise<void>;
+  stop: () => void;
+  getWaveBlob: () => Promise<Blob>;
+  getWaveUrl: () => Promise<string>;
+  exportWave: (filename?: string) => Promise<void>;
+  context: AudioContext;
+  oscillator: OscillatorNode;
+  gainNode: GainNode;
+}

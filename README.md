@@ -23,10 +23,23 @@ const decoded = morse.decode('... --- ...'); // SOS
 const characters = morse.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
 
 const audio = morse.audio('SOS');
-audio.play(); // play audio
-audio.stop(); // stop audio (cannot resume)
-audio.exportWave(); // download audio wave file (promise)
-const url = await audio.getWaveUrl(); // get audio wave url (promise)
+
+// Playback control
+await audio.play();           // play audio (returns Promise)
+audio.pause();                // pause audio
+await audio.play();           // resume from paused position
+await audio.seek(1.5);        // seek to 1.5 seconds
+audio.stop();                 // stop audio and reset to beginning
+audio.dispose();              // cleanup and dispose audio resources
+
+// Playback state and info
+audio.getState();             // 'ready', 'playing', 'paused', or 'stopped'
+audio.getCurrentTime();       // current playback position in seconds
+audio.getTotalTime();         // total duration in seconds
+
+// Export audio
+await audio.exportWave();     // download audio wave file (promise)
+const url = await audio.getWaveUrl();  // get audio wave url (promise)
 const blob = await audio.getWaveBlob(); // get audio wave blob (promise)
 ```
 
@@ -65,17 +78,28 @@ const arabicAudio = morse.audio('البراق', { // generates the Morse .- .-..
   volume: 100, // the volume in percent (0-100)
   oscillator: {
     type: 'sine', // sine, square, sawtooth, triangle
-    frequency: 500,  // value in hertz
-    onended: function () { // event that fires when the tone stops playing
-      console.log('ended');
-    }
+    frequency: 500  // value in hertz
+  },
+  events: {
+    onready: () => console.log('Audio is ready'),
+    onstarted: () => console.log('Playback started'),
+    onpaused: () => console.log('Playback paused'),
+    onstopped: () => console.log('Playback stopped'),
+    onended: () => console.log('Playback completed naturally'),
+    onseeked: (time) => console.log('Seeked to:', time)
   }
 });
+
+// Access to Web Audio API nodes (for advanced users)
 const oscillator = arabicAudio.oscillator; // OscillatorNode
-const context = arabicAudio.context; // AudioContext;
+const context = arabicAudio.context; // AudioContext
 const gainNode = arabicAudio.gainNode; // GainNode
-arabicAudio.play(); // will start playing Morse audio
-arabicAudio.stop(); // will stop playing Morse audio
+
+// Playback control
+await arabicAudio.play(); // will start playing Morse audio
+arabicAudio.pause();      // will pause Morse audio
+await arabicAudio.play(); // will resume from where it was paused
+arabicAudio.stop();       // will stop and reset to beginning
 ```
 
 ## Contributions
@@ -85,17 +109,16 @@ with extensive feedback and contributions from [numerous developers](https://git
 
 Special thanks to [Chris Jones](https://github.com/chris--jones), who added many great features.
 
-## References
+## License & Attribution
 
-Please consider referencing the website of this project, if you find this package useful for your work.
+[MIT licensed](LICENSE), use it however you want. But if this library saved you time, link back to
+the project homepage. It is how open-source maintainers get credit for their work.
 
 ```html
 <a href="https://morsecodetranslator.com">Morse Code Translator</a>
 ```
 
-## License
-
-The MIT License (MIT). Please see [License File](LICENSE) for more information.
+Takes 30 seconds. Appreciated, not required.
 
   [npm-version]: https://img.shields.io/npm/v/@ozdemirburak/morse-code-translator.svg?style=flat-square
   [npm-downloads]: https://img.shields.io/npm/dm/@ozdemirburak/morse-code-translator.svg?style=flat-square

@@ -1,122 +1,164 @@
-const getGainTimings = (morse: string, opts: Options, currentTime = 0): [[[number, number]?], number] => {
-  const timings: [[number, number]?] = [];
-  let {unit, fwUnit} = opts;
+import type { Options, AudioResult, AudioState, AudioEvents } from './types.js';
+
+// Audio constants
+const SAMPLE_RATE = 44100;
+const CHANNELS = 1;
+const BITS_PER_SAMPLE = 16;
+
+// Morse timing constants (in units)
+const DOT_DURATION = 1;
+const DASH_DURATION = 3;
+const INTRA_CHARACTER_GAP = 1;
+const INTER_CHARACTER_GAP = 3;
+const WORD_GAP = 7;
+
+// WPM calculation constant (PARIS method)
+const WPM_UNIT_DIVISOR = 50;
+
+type GainTiming = [number, number];
+type GainTimings = [GainTiming[], number];
+
+const getGainTimings = (morse: string, opts: Options, currentTime = 0): GainTimings => {
+  const timings: GainTiming[] = [];
+  let { unit, fwUnit } = opts;
   let time = 0;
 
   if (opts.wpm) {
-    // wpm mode uses standardised units
-    unit = fwUnit = 60 / (opts.wpm * 50)
+    // WPM mode uses standardized units (PARIS method)
+    unit = fwUnit = 60 / (opts.wpm * WPM_UNIT_DIVISOR);
   }
 
   timings.push([0, time]);
 
-  const tone = (i: number) => {
-    timings.push([1 * (opts.volume / 100.0), currentTime + time]);
-    time += i * unit;
+  const addTiming = (gainValue: number, duration: number, useUnit = true) => {
+    timings.push([gainValue, currentTime + time]);
+    time += duration * (useUnit ? unit : fwUnit);
   };
 
-  const silence = (i: number) => {
-    timings.push([0, currentTime + time]);
-    time += i * unit;
-  };
+  const tone = (duration: number) => addTiming(opts.volume / 100.0, duration);
+  const silence = (duration: number) => addTiming(0, duration);
+  const gap = (duration: number) => addTiming(0, duration, false);
 
-  const gap = (i: number) => {
-    timings.push([0, currentTime + time]);
-    time += i * fwUnit;
-  };
+  for (let i = 0, needsSilence = false; i <= morse.length; i++) {
+    const char = morse[i];
+    const nextChar = morse[i + 1];
+    const prevChar = morse[i - 1];
 
-  for (let i = 0, addSilence = false; i <= morse.length; i++) {
-    if (morse[i] === opts.space) {
-      gap(7);
-      addSilence = false;
-    } else if (morse[i] === opts.dot) {
-      if (addSilence) silence(1); else addSilence = true;
-      tone(1);
-    } else if (morse[i] === opts.dash) {
-      if (addSilence) silence(1); else addSilence = true;
-      tone(3);
+    if (char === opts.space) {
+      gap(WORD_GAP);
+      needsSilence = false;
+    } else if (char === opts.dot) {
+      if (needsSilence) silence(INTRA_CHARACTER_GAP);
+      tone(DOT_DURATION);
+      needsSilence = true;
+    } else if (char === opts.dash) {
+      if (needsSilence) silence(INTRA_CHARACTER_GAP);
+      tone(DASH_DURATION);
+      needsSilence = true;
     } else if (
-      (typeof morse[i + 1] !== 'undefined' && morse[i + 1] !== opts.space) &&
-      (typeof morse[i - 1] !== 'undefined' && morse[i - 1] !== opts.space)
+      nextChar !== undefined && nextChar !== opts.space &&
+      prevChar !== undefined && prevChar !== opts.space
     ) {
-      gap(3);
-      addSilence = false;
+      // Inter-character gap (separator between characters)
+      gap(INTER_CHARACTER_GAP);
+      needsSilence = false;
     }
   }
 
   return [timings, time];
 };
 
-// Source: https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js#L155
-const encodeWAV = (sampleRate: number, samples: Float32Array) => {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
+/**
+ * Encodes audio samples to WAV format
+ * Based on: https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js#L155
+ */
+const encodeWAV = (sampleRate: number, samples: Float32Array): DataView => {
+  const bytesPerSample = BITS_PER_SAMPLE / 8;
+  const blockAlign = CHANNELS * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = samples.length * bytesPerSample;
+  const bufferSize = 44 + dataSize; // WAV header is 44 bytes
+
+  const buffer = new ArrayBuffer(bufferSize);
   const view = new DataView(buffer);
-  const writeString = (view: DataView, offset: number, string: string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
+
+  const writeString = (offset: number, text: string) => {
+    for (let i = 0; i < text.length; i++) {
+      view.setUint8(offset + i, text.charCodeAt(i));
     }
   };
-  // RIFF identifier
-  writeString(view, 0, 'RIFF');
-  // RIFF chunk length
-  view.setUint32(4, 36 + samples.length * 2, true);
-  // RIFF type
-  writeString(view, 8, 'WAVE');
-  // format chunk identifier
-  writeString(view, 12, 'fmt ');
-  // format chunk length
-  view.setUint32(16, 16, true);
-  // sample format (raw)
-  view.setUint16(20, 1, true);
-  // channel count
-  view.setUint16(22, 1, true);
-  // sample rate
+
+  const floatTo16BitPCM = (offset: number, input: Float32Array) => {
+    for (let i = 0; i < input.length; i++, offset += bytesPerSample) {
+      const sample = Math.max(-1, Math.min(1, input[i]));
+      const value = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+      view.setInt16(offset, value, true);
+    }
+  };
+
+  // RIFF chunk descriptor
+  writeString(0, 'RIFF');
+  view.setUint32(4, bufferSize - 8, true); // File size - 8
+  writeString(8, 'WAVE');
+
+  // fmt sub-chunk
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+  view.setUint16(20, 1, true); // AudioFormat (1 = PCM)
+  view.setUint16(22, CHANNELS, true);
   view.setUint32(24, sampleRate, true);
-  // byte rate (sample rate * block align)
-  view.setUint32(28, sampleRate * 4, true);
-  // block align (channel count * bytes per sample)
-  view.setUint16(32, 2, true);
-  // bits per sample
-  view.setUint16(34, 16, true);
-  // data chunk identifier
-  writeString(view, 36, 'data');
-  // data chunk length
-  view.setUint32(40, samples.length * 2, true);
-  // to PCM
-  const floatTo16BitPCM = (output: DataView, offset: number, input: Float32Array) => {
-    for (let i = 0; i < input.length; i++, offset += 2) {
-      const s = Math.max(-1, Math.min(1, input[i]));
-      output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-    }
-  };
-  floatTo16BitPCM(view, 44, samples);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, BITS_PER_SAMPLE, true);
+
+  // data sub-chunk
+  writeString(36, 'data');
+  view.setUint32(40, dataSize, true);
+  floatTo16BitPCM(44, samples);
+
   return view;
 };
 
-const audio = (morse: string, options: Options) => {
-  let AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-  let OfflineAudioContextClass = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
+const audio = (morse: string, options: Options): AudioResult => {
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  const OfflineAudioContextClass = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
 
   if (!AudioContextClass || !OfflineAudioContextClass) {
-    throw new Error('Web Audio API is not supported in this browser');
+    throw new Error('Web Audio API is not supported in this browser. Please use a modern browser with Web Audio API support.');
   }
 
   const context = new AudioContextClass();
   const [gainValues, totalTime] = getGainTimings(morse, options);
-  const offlineContext = new OfflineAudioContextClass(1, 44100 * totalTime, 44100);
+  const bufferLength = Math.ceil(SAMPLE_RATE * totalTime);
+  const offlineContext = new OfflineAudioContextClass(CHANNELS, bufferLength, SAMPLE_RATE);
 
   const oscillator = offlineContext.createOscillator();
   const gainNode = offlineContext.createGain();
 
   oscillator.type = options.oscillator.type as OscillatorType;
-  oscillator.frequency.value = options.oscillator.frequency;
+  oscillator.frequency.value = options.oscillator.frequency ?? 500;
 
-  gainValues.forEach(([value, time]) => gainNode.gain.setValueAtTime(value, time));
+  gainValues.forEach(([value, time]) => {
+    gainNode.gain.setValueAtTime(value, time);
+  });
 
   oscillator.connect(gainNode);
   gainNode.connect(offlineContext.destination);
 
-  let source: AudioBufferSourceNode;
+  // State management
+  let source: AudioBufferSourceNode | null = null;
+  let renderedBuffer: AudioBuffer | null = null;
+  let state: AudioState = 'ready';
+  let pausedAt = 0;
+  let startTime = 0;
+  let timeout: number | null = null;
+
+  const events: AudioEvents = options.events || {};
+
+  // Backwards compatibility: support old onended in oscillator options
+  if (options.oscillator.onended && !events.onended) {
+    events.onended = options.oscillator.onended as any;
+  }
 
   // Render the audio buffer
   const render = new Promise<void>((resolve, reject) => {
@@ -124,42 +166,181 @@ const audio = (morse: string, options: Options) => {
     offlineContext.startRendering();
     offlineContext.oncomplete = (e) => {
       try {
-        source = context.createBufferSource();
-        source.buffer = e.renderedBuffer;
-        source.connect(context.destination);
-        source.onended = options.oscillator.onended;
+        renderedBuffer = e.renderedBuffer;
+        state = 'ready';
+        events.onready?.();
         resolve();
       } catch (err) {
         reject(err);
       }
     };
-    offlineContext.onerror = (err) => {
+    offlineContext.addEventListener('error', (err) => {
       reject(err);
-    };
+    });
   });
 
-  let timeout: number;
+  // Helper: Create a new audio source
+  const createSource = (): AudioBufferSourceNode => {
+    const newSource = context.createBufferSource();
+    newSource.buffer = renderedBuffer;
+    newSource.connect(context.destination);
+    newSource.onended = () => {
+      const currentTime = getCurrentTime();
+      // Only fire onended if playback completed naturally (not stopped/paused)
+      if (state === 'playing' && currentTime >= totalTime - 0.01) {
+        state = 'stopped';
+        pausedAt = 0;
+        events.onended?.();
+      }
+    };
+    return newSource;
+  };
 
   const play = async () => {
     await render;
+
+    // Resume audio context if suspended
     if (context.state === 'suspended') {
       await context.resume();
     }
-    source.start(context.currentTime);
-    timeout = window.setTimeout(() => { stop(); }, totalTime * 1000);
+
+    // If already playing, do nothing
+    if (state === 'playing') {
+      return;
+    }
+
+    // Create new source if needed
+    if (!source || source.buffer === null) {
+      source = createSource();
+    }
+
+    // Start playback from pausedAt position
+    source.start(context.currentTime, pausedAt);
+    startTime = context.currentTime - pausedAt;
+    state = 'playing';
+    events.onstarted?.();
+
+    // Set up auto-stop when playback completes
+    const remainingTime = (totalTime - pausedAt) * 1000;
+    timeout = window.setTimeout(() => {
+      if (state === 'playing') {
+        stop();
+      }
+    }, remainingTime);
   };
 
-  const stop = () => {
-    clearTimeout(timeout);
+  const pause = () => {
+    if (state !== 'playing') {
+      return;
+    }
+
+    if (timeout !== null) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+
+    pausedAt = Math.min(context.currentTime - startTime, totalTime);
+
     if (source) {
       source.stop(0);
+      source = null;
+    }
+
+    state = 'paused';
+    events.onpaused?.();
+  };
+
+  const stop = (dispose = false) => {
+    if (timeout !== null) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+
+    if (source) {
+      try {
+        source.stop(0);
+      } catch (e) {
+        // Ignore if already stopped
+      }
+      source = null;
+    }
+
+    const wasPlaying = state === 'playing';
+    state = 'stopped';
+    pausedAt = 0;
+    startTime = 0;
+
+    if (wasPlaying) {
+      events.onstopped?.();
+    }
+
+    if (dispose) {
+      renderedBuffer = null;
     }
   };
 
-  const getWaveBlob = async () => {
+  const seek = async (time: number) => {
+    const wasPlaying = state === 'playing';
+    const clampedTime = Math.max(0, Math.min(time, totalTime));
+
+    // Stop current playback
+    if (source) {
+      if (timeout !== null) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      try {
+        source.stop(0);
+      } catch (e) {
+        // Ignore
+      }
+      source = null;
+    }
+
+    pausedAt = clampedTime;
+    events.onseeked?.(clampedTime);
+
+    // Resume playback if was playing
+    if (wasPlaying) {
+      state = 'paused'; // Set to paused so play() will work
+      await play();
+    }
+  };
+
+  const dispose = () => {
+    stop(true);
+    if (context.state !== 'closed') {
+      context.close();
+    }
+  };
+
+  const getCurrentTime = (): number => {
+    if (state === 'playing') {
+      return Math.min(context.currentTime - startTime, totalTime);
+    }
+    return pausedAt;
+  };
+
+  const getTotalTime = (): number => {
+    return totalTime;
+  };
+
+  const getState = (): AudioState => {
+    return state;
+  };
+
+  const getWaveBlob = async (): Promise<Blob> => {
     await render;
-    const waveData = encodeWAV(offlineContext.sampleRate, source.buffer.getChannelData(0));
-    return new Blob([waveData], { type: 'audio/wav' });
+    if (!renderedBuffer) {
+      throw new Error('Audio buffer not available');
+    }
+    const waveData = encodeWAV(offlineContext.sampleRate, renderedBuffer.getChannelData(0));
+    // Create a proper Uint8Array copy for Blob
+    const uint8Array = new Uint8Array(waveData.byteLength);
+    for (let i = 0; i < waveData.byteLength; i++) {
+      uint8Array[i] = waveData.getUint8(i);
+    }
+    return new Blob([uint8Array], { type: 'audio/wav' });
   };
 
   const getWaveUrl = async () => {
@@ -167,24 +348,37 @@ const audio = (morse: string, options: Options) => {
     return URL.createObjectURL(audioBlob);
   };
 
-  const exportWave = async (filename: string) => {
+  const exportWave = async (filename: string = 'morse.wav') => {
     const waveUrl = await getWaveUrl();
     const anchor = document.createElement('a');
     anchor.href = waveUrl;
     anchor.target = '_blank';
-    anchor.download = filename || 'morse.wav';
+    anchor.download = filename;
     anchor.click();
   };
 
   return {
+    // Playback control
     play,
+    pause,
     stop,
+    seek,
+    dispose,
+
+    // Playback information
+    getCurrentTime,
+    getTotalTime,
+    getState,
+
+    // Export functionality
     getWaveBlob,
     getWaveUrl,
     exportWave,
+
+    // Context access (for advanced users)
     context,
     oscillator,
-    gainNode
+    gainNode,
   };
 };
 

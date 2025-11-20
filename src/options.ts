@@ -1,3 +1,5 @@
+import type { Options } from './types.js';
+
 const getOptions = (opts: Partial<Options> = {}): Options => {
   const options: Options = {
     ...opts,
