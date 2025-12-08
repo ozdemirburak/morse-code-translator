@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as morse from '../src/index.js';
+import * as morse from '../src/index';
+import type { AudioResult } from '../src/types';
 
 describe('audio', () => {
-  let audioInstance;
+  let audioInstance: AudioResult;
 
   beforeEach(() => {
     audioInstance = morse.audio('SOS');
@@ -61,11 +62,11 @@ describe('audio', () => {
       click: vi.fn()
     };
 
-    const originalCreateElement = document.createElement;
-    document.createElement = vi.fn((tag) => {
-      if (tag === 'a') return mockAnchor;
-      return originalCreateElement.call(document, tag);
-    });
+    const originalCreateElement = document.createElement.bind(document);
+    document.createElement = vi.fn((tag: string) => {
+      if (tag === 'a') return mockAnchor as unknown as HTMLElement;
+      return originalCreateElement(tag);
+    }) as typeof document.createElement;
 
     await audioInstance.exportWave('test-morse.wav');
 
@@ -85,11 +86,11 @@ describe('audio', () => {
       click: vi.fn()
     };
 
-    const originalCreateElement = document.createElement;
-    document.createElement = vi.fn((tag) => {
-      if (tag === 'a') return mockAnchor;
-      return originalCreateElement.call(document, tag);
-    });
+    const originalCreateElement = document.createElement.bind(document);
+    document.createElement = vi.fn((tag: string) => {
+      if (tag === 'a') return mockAnchor as unknown as HTMLElement;
+      return originalCreateElement(tag);
+    }) as typeof document.createElement;
 
     await audioInstance.exportWave();
 
@@ -107,7 +108,7 @@ describe('audio', () => {
   });
 
   it('handles different oscillator types', () => {
-    const types = ['sine', 'square', 'sawtooth', 'triangle'];
+    const types: OscillatorType[] = ['sine', 'square', 'sawtooth', 'triangle'];
 
     types.forEach(type => {
       const audio = morse.audio('A', {
@@ -294,7 +295,7 @@ describe('audio', () => {
 
       const time2 = audioInstance.getCurrentTime();
       // In real environment, time2 should be >= time1
-      expect(time2).toBeGreaterThanOrEqual(0);
+      expect(time2).toBeGreaterThanOrEqual(time1);
 
       audioInstance.stop();
     });
@@ -307,16 +308,14 @@ describe('audio', () => {
   });
 
   describe('Event System', () => {
-    it('fires onready event when audio is ready', (done) => {
+    it('fires onready event when audio is ready', async () => {
       const onready = vi.fn();
-      const audio = morse.audio('A', {
+      morse.audio('A', {
         events: { onready }
       });
 
-      setTimeout(() => {
-        expect(onready).toHaveBeenCalled();
-        done();
-      }, 100);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      expect(onready).toHaveBeenCalled();
     });
 
     it('fires onstarted event when playback starts', async () => {

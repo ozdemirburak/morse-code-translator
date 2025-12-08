@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import * as morse from '../src/index.js';
+import * as morse from '../src/index';
 
 describe('morse', () => {
   it('encodes english alphabet', () => {
