@@ -15,6 +15,10 @@ const WORD_GAP = 7;
 // WPM calculation constant (PARIS method)
 const WPM_UNIT_DIVISOR = 50;
 
+// Upper bound on rendered audio length, so a degenerate (huge / non-finite)
+// unit/wpm cannot produce an Infinite totalTime, buffer, or playback timer.
+const MAX_TOTAL_SECONDS = 3600;
+
 type GainTiming = [number, number];
 type GainTimings = [GainTiming[], number];
 
@@ -39,33 +43,49 @@ const getGainTimings = (morse: string, opts: Options, currentTime = 0): GainTimi
   const silence = (duration: number) => addTiming(0, duration);
   const gap = (duration: number) => addTiming(0, duration, false);
 
-  for (let i = 0, needsSilence = false; i <= morse.length; i++) {
-    const char = morse[i];
-    const nextChar = morse[i + 1];
-    const prevChar = morse[i - 1];
+  // Try the longer symbol first so a shorter dot/dash that is a prefix of the
+  // other (e.g. dot '..' vs dash '...') cannot greedily mis-tokenize it.
+  const symbolOrder: Array<[string, number]> =
+    opts.dot.length >= opts.dash.length
+      ? [[opts.dot, DOT_DURATION], [opts.dash, DASH_DURATION]]
+      : [[opts.dash, DASH_DURATION], [opts.dot, DOT_DURATION]];
 
-    if (char === opts.space) {
+  // Split into words by the word-gap symbol, then characters by the separator,
+  // then consume whole dot/dash symbols. Matching whole symbols (rather than
+  // single code points) supports multi-character dot/dash/space symbols. Empty
+  // words are dropped so leading/trailing/doubled word separators do not emit
+  // phantom word gaps.
+  const words = morse
+    .split(opts.space)
+    .map((word) => word.split(opts.separator).filter((character) => character !== ''))
+    .filter((characters) => characters.length > 0);
+  words.forEach((characters, wordIndex) => {
+    if (wordIndex > 0) {
       gap(WORD_GAP);
-      needsSilence = false;
-    } else if (char === opts.dot) {
-      if (needsSilence) silence(INTRA_CHARACTER_GAP);
-      tone(DOT_DURATION);
-      needsSilence = true;
-    } else if (char === opts.dash) {
-      if (needsSilence) silence(INTRA_CHARACTER_GAP);
-      tone(DASH_DURATION);
-      needsSilence = true;
-    } else if (
-      nextChar !== undefined && nextChar !== opts.space &&
-      prevChar !== undefined && prevChar !== opts.space
-    ) {
-      // Inter-character gap (separator between characters)
-      gap(INTER_CHARACTER_GAP);
-      needsSilence = false;
     }
-  }
+    characters.forEach((character, characterIndex) => {
+      if (characterIndex > 0) {
+        gap(INTER_CHARACTER_GAP);
+      }
+      let position = 0;
+      let needsSilence = false;
+      while (position < character.length) {
+        const matched = symbolOrder.find(([symbol]) => symbol && character.startsWith(symbol, position));
+        if (matched) {
+          if (needsSilence) silence(INTRA_CHARACTER_GAP);
+          tone(matched[1]);
+          needsSilence = true;
+          position += matched[0].length;
+        } else {
+          // Skip any unexpected symbol (e.g. the invalid-character marker).
+          position += 1;
+        }
+      }
+    });
+  });
 
-  return [timings, time];
+  // Clamp so a degenerate unit/wpm cannot yield a non-finite or absurd duration.
+  return [timings, Math.min(time, MAX_TOTAL_SECONDS)];
 };
 
 /**
@@ -127,9 +147,11 @@ const audio = (morse: string, options: Options): AudioResult => {
     throw new Error('Web Audio API is not supported in this browser. Please use a modern browser with Web Audio API support.');
   }
 
-  const context = new AudioContextClass();
   const [gainValues, totalTime] = getGainTimings(morse, options);
-  const bufferLength = Math.ceil(SAMPLE_RATE * totalTime);
+  // OfflineAudioContext requires a length of at least one sample frame, so an
+  // empty/silent morse string still yields a valid tiny buffer. The upper bound
+  // is already enforced by getGainTimings clamping totalTime to MAX_TOTAL_SECONDS.
+  const bufferLength = Math.max(1, Math.ceil(SAMPLE_RATE * totalTime));
   const offlineContext = new OfflineAudioContextClass(CHANNELS, bufferLength, SAMPLE_RATE);
 
   const oscillator = offlineContext.createOscillator();
@@ -145,13 +167,31 @@ const audio = (morse: string, options: Options): AudioResult => {
   oscillator.connect(gainNode);
   gainNode.connect(offlineContext.destination);
 
-  // State management
+  // The live playback AudioContext is created lazily: callers who only render or
+  // export WAV data never allocate one (browsers cap the number of live contexts).
+  let context: AudioContext | null = null;
+  // State management (declared before getContext so it can read `state`)
   let source: AudioBufferSourceNode | null = null;
   let renderedBuffer: AudioBuffer | null = null;
   let state: AudioState = 'ready';
   let pausedAt = 0;
   let startTime = 0;
   let timeout: number | null = null;
+  // True while a play() is in its async startup (between the synchronous entry
+  // and the moment it actually starts or bails). Lets stop()/seek() know a
+  // playback intent is in flight.
+  let pendingPlay = false;
+  // Incremented by play()/stop()/seek()/dispose(); lets an in-flight play()
+  // detect it was superseded during an await and bail instead of resurrecting.
+  let epoch = 0;
+
+  const getContext = (): AudioContext => {
+    // Never create (or resurrect) a live context once disposed.
+    if (!context && state !== 'disposed') {
+      context = new AudioContextClass();
+    }
+    return context as AudioContext;
+  };
 
   const events: AudioEvents = options.events || {};
 
@@ -166,9 +206,15 @@ const audio = (morse: string, options: Options): AudioResult => {
     offlineContext.startRendering();
     offlineContext.oncomplete = (e) => {
       try {
-        renderedBuffer = e.renderedBuffer;
-        state = 'ready';
-        events.onready?.();
+        // If the instance was disposed before rendering finished, do not populate
+        // the buffer or signal readiness — keeps post-dispose export deterministic
+        // (getWaveBlob throws) instead of timing-dependent. Still resolve so any
+        // awaiters do not hang. Otherwise: do NOT reset state to 'ready' (the
+        // caller may have already stopped/started during rendering).
+        if (state !== 'disposed') {
+          renderedBuffer = e.renderedBuffer;
+          events.onready?.();
+        }
         resolve();
       } catch (err) {
         reject(err);
@@ -179,83 +225,14 @@ const audio = (morse: string, options: Options): AudioResult => {
     });
   });
 
-  // Helper: Create a new audio source
-  const createSource = (): AudioBufferSourceNode => {
-    const newSource = context.createBufferSource();
-    newSource.buffer = renderedBuffer;
-    newSource.connect(context.destination);
-    newSource.onended = () => {
-      const currentTime = getCurrentTime();
-      // Only fire onended if playback completed naturally (not stopped/paused)
-      if (state === 'playing' && currentTime >= totalTime - 0.01) {
-        state = 'stopped';
-        pausedAt = 0;
-        events.onended?.();
-      }
-    };
-    return newSource;
-  };
-
-  const play = async () => {
-    await render;
-
-    // Resume audio context if suspended
-    if (context.state === 'suspended') {
-      await context.resume();
-    }
-
-    // If already playing, do nothing
-    if (state === 'playing') {
-      return;
-    }
-
-    // Create new source if needed
-    if (!source || source.buffer === null) {
-      source = createSource();
-    }
-
-    // Start playback from pausedAt position
-    source.start(context.currentTime, pausedAt);
-    startTime = context.currentTime - pausedAt;
-    state = 'playing';
-    events.onstarted?.();
-
-    // Set up auto-stop when playback completes
-    const remainingTime = (totalTime - pausedAt) * 1000;
-    timeout = window.setTimeout(() => {
-      if (state === 'playing') {
-        stop();
-      }
-    }, remainingTime);
-  };
-
-  const pause = () => {
-    if (state !== 'playing') {
-      return;
-    }
-
+  const clearAutoStop = () => {
     if (timeout !== null) {
       clearTimeout(timeout);
       timeout = null;
     }
-
-    pausedAt = Math.min(context.currentTime - startTime, totalTime);
-
-    if (source) {
-      source.stop(0);
-      source = null;
-    }
-
-    state = 'paused';
-    events.onpaused?.();
   };
 
-  const stop = (dispose = false) => {
-    if (timeout !== null) {
-      clearTimeout(timeout);
-      timeout = null;
-    }
-
+  const stopSource = () => {
     if (source) {
       try {
         source.stop(0);
@@ -264,13 +241,126 @@ const audio = (morse: string, options: Options): AudioResult => {
       }
       source = null;
     }
+  };
 
-    const wasPlaying = state === 'playing';
+  // Helper: Create a new audio source
+  const createSource = (): AudioBufferSourceNode => {
+    const ctx = getContext();
+    const newSource = ctx.createBufferSource();
+    newSource.buffer = renderedBuffer;
+    newSource.connect(ctx.destination);
+    return newSource;
+  };
+
+  const play = async () => {
+    // Already playing or disposed -> nothing to do.
+    if (state === 'playing' || state === 'disposed') {
+      return;
+    }
+    // Claim a fresh epoch. Any EARLIER in-flight play() now sees a changed epoch
+    // and bails (so concurrent play() calls start exactly once); stop()/seek()/
+    // dispose() also bump the epoch to supersede an in-flight play.
+    const myEpoch = ++epoch;
+    pendingPlay = true;
+    const superseded = (): boolean => epoch !== myEpoch || getState() === 'disposed';
+    try {
+      await render;
+
+      // Bail if superseded during the render await. Checked BEFORE touching the
+      // context so a disposed/stopped instance never lazily creates one.
+      if (superseded()) {
+        return;
+      }
+
+      const ctx = getContext();
+      // Resume audio context if suspended
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+
+      // Re-check after the resume await for the same reason.
+      if (superseded()) {
+        return;
+      }
+
+      // Create new source if needed (source is null whenever not actively playing)
+      if (!source) {
+        source = createSource();
+      }
+
+      // Start playback from pausedAt position
+      source.start(ctx.currentTime, pausedAt);
+      startTime = ctx.currentTime - pausedAt;
+      state = 'playing';
+      events.onstarted?.();
+
+      // Set up auto-stop when playback completes naturally. pause()/stop()/seek()
+      // all clear this timer, so when it fires playback genuinely reached the end.
+      clearAutoStop();
+      const remainingTime = (totalTime - pausedAt) * 1000;
+      timeout = window.setTimeout(() => {
+        if (state === 'playing') {
+          clearAutoStop();
+          stopSource();
+          state = 'stopped';
+          pausedAt = 0;
+          startTime = 0;
+          events.onended?.();
+        }
+      }, remainingTime);
+    } finally {
+      // Only the current epoch's play() owns the pendingPlay flag; a superseding
+      // call manages its own lifecycle.
+      if (epoch === myEpoch) {
+        pendingPlay = false;
+      }
+    }
+  };
+
+  const pause = () => {
+    if (state === 'disposed') {
+      return;
+    }
+
+    if (state === 'playing') {
+      clearAutoStop();
+      pausedAt = Math.min(getContext().currentTime - startTime, totalTime);
+      stopSource();
+      state = 'paused';
+      events.onpaused?.();
+      return;
+    }
+
+    // An in-flight play() that has not started yet: supersede it (so it bails
+    // on resume) and settle into 'paused' rather than dropping the intent.
+    if (pendingPlay) {
+      epoch++;
+      pendingPlay = false;
+      clearAutoStop();
+      stopSource();
+      state = 'paused';
+      events.onpaused?.();
+    }
+  };
+
+  const stop = (dispose = false) => {
+    if (state === 'disposed') {
+      return;
+    }
+
+    epoch++;
+    clearAutoStop();
+    stopSource();
+
+    // Active = currently playing OR a play()/seek-resume is in flight; in both
+    // cases the playback the listener believes is happening is being stopped.
+    const wasActive = state === 'playing' || pendingPlay;
+    pendingPlay = false;
     state = 'stopped';
     pausedAt = 0;
     startTime = 0;
 
-    if (wasPlaying) {
+    if (wasActive) {
       events.onstopped?.();
     }
 
@@ -280,43 +370,43 @@ const audio = (morse: string, options: Options): AudioResult => {
   };
 
   const seek = async (time: number) => {
-    const wasPlaying = state === 'playing';
-    const clampedTime = Math.max(0, Math.min(time, totalTime));
-
-    // Stop current playback
-    if (source) {
-      if (timeout !== null) {
-        clearTimeout(timeout);
-        timeout = null;
-      }
-      try {
-        source.stop(0);
-      } catch (e) {
-        // Ignore
-      }
-      source = null;
+    if (state === 'disposed') {
+      return;
     }
+
+    // Resume afterwards if playback is active or a play() is in flight (so a
+    // play() immediately followed by seek() is not silently swallowed).
+    const wasActive = state === 'playing' || pendingPlay;
+    // Neutralize only NaN (Math.min/Math.max do not); ±Infinity still clamps to
+    // the [0, totalTime] range as expected.
+    const safeTime = Number.isNaN(time) ? 0 : time;
+    const clampedTime = Math.max(0, Math.min(safeTime, totalTime));
+
+    epoch++;
+    // Stop current playback
+    clearAutoStop();
+    stopSource();
 
     pausedAt = clampedTime;
     events.onseeked?.(clampedTime);
 
-    // Resume playback if was playing
-    if (wasPlaying) {
-      state = 'paused'; // Set to paused so play() will work
+    if (wasActive) {
+      state = 'paused'; // transient; play() sets it back to 'playing'
       await play();
     }
   };
 
   const dispose = () => {
     stop(true);
-    if (context.state !== 'closed') {
+    state = 'disposed';
+    if (context && context.state !== 'closed') {
       context.close();
     }
   };
 
   const getCurrentTime = (): number => {
     if (state === 'playing') {
-      return Math.min(context.currentTime - startTime, totalTime);
+      return Math.min(getContext().currentTime - startTime, totalTime);
     }
     return pausedAt;
   };
@@ -355,9 +445,11 @@ const audio = (morse: string, options: Options): AudioResult => {
     anchor.target = '_blank';
     anchor.download = filename;
     anchor.click();
+    // Release the internally-created object URL once the download has started.
+    setTimeout(() => URL.revokeObjectURL(waveUrl), 1000);
   };
 
-  return {
+  const result = {
     // Playback control
     play,
     pause,
@@ -375,11 +467,21 @@ const audio = (morse: string, options: Options): AudioResult => {
     getWaveUrl,
     exportWave,
 
-    // Context access (for advanced users)
-    context,
+    // Audio nodes (for advanced users)
     oscillator,
     gainNode,
-  };
+  } as AudioResult;
+
+  // Context access (for advanced users); created lazily on first access. Defined
+  // as a NON-enumerable getter so object spread / JSON.stringify / Object.keys do
+  // not accidentally allocate a live AudioContext (browsers cap how many exist).
+  Object.defineProperty(result, 'context', {
+    get: getContext,
+    enumerable: false,
+    configurable: true,
+  });
+
+  return result;
 };
 
 export default audio;
