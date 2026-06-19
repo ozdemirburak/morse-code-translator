@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as morse from '../src/index';
 
 describe('morse', () => {
@@ -198,7 +198,7 @@ describe('morse', () => {
     expect(characters[10]['ア']).toBe('--.--');
     expect(characters[11]['ㄱ']).toBe('.-..');
     expect(characters[12]['ก']).toBe('--.');
-    characters = morse.characters({ dash: '–', dot: '•', space: ' ' });
+    characters = morse.characters({ dash: '–', dot: '•' });
     expect(characters[1]['A']).toBe('•–');
     expect(characters[2]['0']).toBe('–––––');
     expect(characters[3]['.']).toBe('•–•–•–');
@@ -215,5 +215,171 @@ describe('morse', () => {
   it('trims and removes multiple spaces', () => {
     expect(morse.encode(' hello   there ')).toBe('.... . .-.. .-.. --- / - .... . .-. .');
     expect(morse.decode(' --. .   -. . .-. .- .-.. / -.- . -. --- -... .. ')).toBe('GENERAL KENOBI');
+  });
+
+  describe('regression', () => {
+    it('decodes empty / whitespace-only input to an empty string (B16)', () => {
+      expect(morse.decode('')).toBe('');
+      expect(morse.decode('    ')).toBe('');
+    });
+
+    it('does not leak prototype members when decoding (B5)', () => {
+      expect(morse.decode('constructor')).toBe('#');
+      expect(morse.decode('toString')).toBe('#');
+      expect(morse.decode('hasOwnProperty')).toBe('#');
+      expect(morse.decode('__proto__')).toBe('#');
+    });
+
+    it('round-trips word spacing with a custom separator (B6)', () => {
+      const options = { separator: '|' };
+      const encoded = morse.encode('a b c', options);
+      expect(morse.decode(encoded, options)).toBe('A B C');
+    });
+
+    it('rejects a custom space/separator that is indistinguishable from a code (B6/B9)', () => {
+      // space '.-' would collide with A's morse code -> ambiguous, so reject it.
+      expect(() => morse.decode('.-', { space: '.-' })).toThrow();
+      expect(() => morse.encode('A B', { separator: '..' })).toThrow();
+    });
+
+    it('throws when separator and space are the same symbol (B9)', () => {
+      expect(() => morse.encode('HI BY', { separator: '|', space: '|' })).toThrow();
+    });
+
+    it('rejects a separator that is an encodable character (round2 #2)', () => {
+      expect(() => morse.encode('A B', { separator: 'X' })).toThrow();
+      expect(() => morse.encode('A B', { separator: '/' })).toThrow(); // '/' is punctuation
+    });
+
+    it('rejects a code-like invalid marker but allows empty (round2 #4)', () => {
+      expect(() => morse.encode('x', { invalid: '.-' })).toThrow();
+      expect(() => morse.encode('x', { invalid: '' })).not.toThrow();
+    });
+
+    it('drops unknown characters cleanly with no phantom separators (round3 #1)', () => {
+      expect(morse.encode('A€B', { invalid: '' })).toBe('.- -...');
+      expect(morse.encode('A€B', { invalid: '', separator: '|' })).toBe('.-|-...');
+      expect(morse.encode('AB€', { invalid: '', separator: '|' })).toBe('.-|-...');
+      expect(morse.encode('A€€€B', { invalid: '' })).toBe('.- -...');
+    });
+
+    it('round-trips a realistic mixed character-set string (retry-2)', () => {
+      // exercises the cross-set priority fallthrough (letters + numbers + punctuation)
+      expect(morse.decode(morse.encode('SOS 911!'))).toBe('SOS 911!');
+      expect(morse.decode(morse.encode('Hello, World!'))).toBe('HELLO, WORLD!');
+    });
+
+    it('decode drops unrecognized tokens in drop-unknown mode (retry)', () => {
+      expect(morse.decode('.- ........ -...', { invalid: '' })).toBe('AB');
+      expect(morse.decode('.- ........ -...')).toBe('A#B'); // default marker
+    });
+
+    it('characters(options, true) exposes the priority set under key "0" (retry)', () => {
+      const withPriority = morse.characters({ priority: 5 }, true);
+      expect(withPriority['0']['А']).toBe('.-'); // Cyrillic А via priority set
+      expect(morse.characters()['0']).toBeUndefined(); // omitted by default
+    });
+
+    it('rejects a separator/space mixing whitespace with other characters (round3 #2)', () => {
+      expect(() => morse.encode('A B', { separator: ' / ' })).toThrow();
+      expect(() => morse.encode('A B', { space: ' // ', separator: '|' })).toThrow();
+      expect(() => morse.encode('A B', { separator: ' ' })).not.toThrow();
+    });
+
+    it('rejects a multi-character separator/space (round4 #1)', () => {
+      expect(() => morse.encode('A B', { separator: 'XX' })).toThrow();
+      expect(() => morse.encode('A B', { space: '##', separator: '|' })).toThrow();
+    });
+
+    it('rejects dot/dash containing the space or separator symbol (round5 #1)', () => {
+      expect(() => morse.encode('T', { dash: '-/-' })).toThrow(); // contains space '/'
+      expect(() => morse.encode('E', { dot: '. .' })).toThrow(); // contains separator ' '
+    });
+
+    it('defaults out-of-range/non-integer priority to 1 (round6)', () => {
+      // خ is shared between Arabic(8) and Persian(9); priority:9 picks Persian.
+      expect(morse.encode('خ', { priority: 9 })).toBe('-..-');
+      // invalid priorities must NOT silently land on a wrong alphabet.
+      const arabicDefault = morse.encode('خ', { priority: 8 });
+      expect(morse.encode('خ', { priority: 13 })).toBe(morse.encode('خ'));
+      expect(morse.encode('خ', { priority: 9.5 })).toBe(morse.encode('خ'));
+      expect(morse.encode('خ', { priority: 9 })).not.toBe(arabicDefault);
+    });
+
+    it('does not turn a stray combining mark on a non-Japanese base into a voicing tone (round6)', () => {
+      // Latin A + combining katakana voiced mark -> mark stays invalid.
+      expect(morse.encode(String.fromCodePoint(0x41, 0x3099))).toBe('.- #');
+    });
+
+    it('drops orphaned word-gaps in drop-unknown mode (round5 #5)', () => {
+      expect(morse.encode('# A', { invalid: '' })).toBe('.-');
+      expect(morse.encode('A #', { invalid: '' })).toBe('.-');
+      expect(morse.encode('# #', { invalid: '' })).toBe('');
+      expect(morse.decode(morse.encode('A #', { invalid: '' }))).toBe('A');
+    });
+
+    it('trims boundary whitespace with a custom separator (round4 #2/#3)', () => {
+      expect(morse.encode('  AB  ', { separator: '|' })).toBe('.-|-...');
+      expect(morse.encode('   ', { separator: '|' })).toBe('');
+      expect(morse.decode('  .-  ', { separator: '|' })).toBe('A');
+      expect(morse.decode(morse.encode('  A B  ', { separator: '|' }), { separator: '|' })).toBe('A B');
+    });
+
+    it('treats canonically-equivalent NFD and NFC Latin identically (round4 #4)', () => {
+      const nfc = morse.encode('Á'); // Á precomposed
+      const nfd = morse.encode('Á'); // A + combining acute
+      void nfc;
+      void nfd;
+      const composed = morse.encode(String.fromCodePoint(0x00c1)); // Á precomposed (NFC)
+      const decomposed = morse.encode(String.fromCodePoint(0x41, 0x0301)); // A + combining acute (NFD)
+      expect(decomposed).toBe(composed);
+      expect(composed).toBe('.--.-');
+    });
+
+    it('encodes correctly when dot/dash contain the internal 0/1 sentinels (B4-binary)', () => {
+      // dot='1', dash='0' must not be corrupted by the code-substitution step.
+      expect(morse.encode('A', { dot: '1', dash: '0' })).toBe('10'); // A = 01 internal -> dot,dash
+      expect(morse.decode('10', { dot: '1', dash: '0' })).toBe('A');
+      expect(morse.decode(morse.encode('SOS', { dot: '1', dash: '0' }), { dot: '1', dash: '0' })).toBe('SOS');
+    });
+
+    it('encodes precomposed (NFC) katakana such as ガ (B2)', () => {
+      const options = { priority: 10, dash: '－', dot: '・', separator: '　' };
+      // precomposed ガ decomposes to base カ (・－・・) + dakuten ゛ (・・)
+      expect(morse.encode('ガ', options)).toBe('・－・・　・・');
+      // base katakana still encodes as before
+      expect(morse.encode('カ', options)).toBe('・－・・');
+    });
+
+    it('does not break precomposed Latin keys when normalizing (B2)', () => {
+      expect(morse.encode('ÃÁÅÀÂÄ')).toBe('.--.- .--.- .--.- .--.- .--.- .-.-');
+    });
+
+    it('encodes decomposed (NFD) katakana as well as precomposed (B2)', () => {
+      const options = { priority: 10, dash: '－', dot: '・', separator: '　' };
+      const decomposed = 'ガ'; // カ + combining dakuten -> same as precomposed ガ
+      expect(morse.encode(decomposed, options)).toBe('・－・・　・・');
+    });
+
+    it('uppercases deterministically regardless of locale (B4)', () => {
+      expect(morse.encode('i')).toBe('..');
+      expect(morse.encode('istanbul')).toBe('.. ... - .- -. -... ..- .-..');
+      // Guard against regressing to toLocaleUpperCase (which would break under tr-TR).
+      const spy = vi.spyOn(String.prototype, 'toLocaleUpperCase');
+      morse.encode('istanbul');
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('drops unknown characters when invalid is empty (B7)', () => {
+      expect(morse.encode('×')).toBe('#');
+      expect(morse.encode('×', { invalid: '' })).toBe('');
+    });
+
+    it('throws on colliding dot/dash/separator symbols (B9)', () => {
+      expect(() => morse.encode('A', { dot: '.', dash: '.' })).toThrow();
+      expect(() => morse.encode('A', { separator: '.' })).toThrow();
+      expect(() => morse.encode('A', { space: '-' })).toThrow();
+    });
   });
 });

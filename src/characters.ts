@@ -25,7 +25,7 @@ const baseCharacters: Characters = {
     'Ê': '10010', 'Ğ': '11010', 'Ĝ': '11010', 'Ĥ': '1111', 'İ': '01001', 'Ï': '10011',
     'Ì': '01110', 'Ĵ': '01110', 'Ł': '01001', 'Ń': '11011', 'Ñ': '11011', 'Ó': '1110',
     'Ò': '1110', 'Ö': '1110', 'Ô': '1110', 'Ø': '1110', 'Ś': '0001000', 'Ş': '01100',
-    'Ș': '1111', 'Š': '1111', 'Ŝ': '00010', 'ß': '000000', 'Þ': '01100', 'Ü': '0011',
+    'Ș': '1111', 'Š': '1111', 'Ŝ': '00010', 'Þ': '01100', 'Ü': '0011',
     'Ù': '0011', 'Ŭ': '0011', 'Ž': '11001', 'Ź': '110010', 'Ż': '11001'
   },
   '5': { // Cyrillic Alphabet => https://en.wikipedia.org/wiki/Russian_Morse_code
@@ -114,7 +114,7 @@ const getMappedCharacters = (options: Options, usePriority: boolean) => {
     const charSet = characters[set as keyof typeof characters];
     if (charSet) {
       for (const key in charSet) {
-        mapped[set][key] = charSet[key].replace(/0/g, options.dot).replace(/1/g, options.dash);
+        mapped[set][key] = charSet[key].replace(/[01]/g, (c) => (c === '0' ? options.dot : options.dash));
       }
     }
   }
@@ -125,19 +125,30 @@ const getMappedCharacters = (options: Options, usePriority: boolean) => {
 };
 
 const swapCharacters = (options: Options) => {
-  const swapped: Record<string, string> = {};
+  // Null-prototype map so user-supplied tokens can never resolve to inherited
+  // Object.prototype members (e.g. "constructor") during decoding.
+  const swapped: Record<string, string> = Object.create(null);
   const mappedCharacters = getMappedCharacters(options, true);
   for (const set in mappedCharacters) {
     for (const key in mappedCharacters[set]) {
-      if (typeof swapped[mappedCharacters[set][key]] === 'undefined') {
-        swapped[mappedCharacters[set][key]] = key;
+      const code = mappedCharacters[set][key];
+      if (typeof swapped[code] === 'undefined') {
+        swapped[code] = key;
       }
     }
+  }
+  // The word-gap symbol must always decode to a literal space, independent of a
+  // custom separator (otherwise the gap decodes back to the separator string).
+  // Only override the (incorrect) separator-derived mapping, never a real
+  // character that legitimately owns this code.
+  if (typeof swapped[options.space] === 'undefined' || swapped[options.space] === options.separator) {
+    swapped[options.space] = ' ';
   }
   return swapped;
 };
 
 export {
+  baseCharacters,
   getCharacters,
   getMappedCharacters,
   swapCharacters
