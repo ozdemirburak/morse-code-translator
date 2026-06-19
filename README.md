@@ -33,7 +33,7 @@ audio.stop();                 // stop audio and reset to beginning
 audio.dispose();              // cleanup and dispose audio resources
 
 // Playback state and info
-audio.getState();             // 'ready', 'playing', 'paused', or 'stopped'
+audio.getState();             // 'ready', 'playing', 'paused', 'stopped', or 'disposed'
 audio.getCurrentTime();       // current playback position in seconds
 audio.getTotalTime();         // total duration in seconds
 

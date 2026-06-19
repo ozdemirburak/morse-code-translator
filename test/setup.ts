@@ -76,6 +76,10 @@ class MockOfflineAudioContext {
   private _gainNode: MockGainNode;
 
   constructor(_numberOfChannels: number, _length: number, sampleRate?: number) {
+    // Match real browsers, which throw when the buffer length is < 1 frame.
+    if (!_length || _length < 1) {
+      throw new Error('Failed to construct \'OfflineAudioContext\': length must be at least 1.');
+    }
     this.sampleRate = sampleRate || 44100;
     this.destination = {};
     this.oncomplete = null;

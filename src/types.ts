@@ -10,7 +10,7 @@ export type Characters = {
 export interface Oscillator {
   type?: OscillatorType;
   frequency?: number;
-  // Deprecated: Use audio.events.onended instead
+  /** @deprecated Use audio.events.onended instead */
   onended?: ((this: AudioScheduledSourceNode, ev: Event) => any) | null;
 }
 
@@ -29,7 +29,7 @@ export interface Options {
   events?: AudioEvents;
 }
 
-export type AudioState = 'playing' | 'paused' | 'stopped' | 'ready';
+export type AudioState = 'playing' | 'paused' | 'stopped' | 'ready' | 'disposed';
 
 export interface AudioEvents {
   onstarted?: () => void;
@@ -58,8 +58,8 @@ export interface AudioResult {
   getWaveUrl: () => Promise<string>;
   exportWave: (filename?: string) => Promise<void>;
 
-  // Context access (for advanced users)
-  context: AudioContext;
+  // Context access (for advanced users); null after dispose() if never created.
+  context: AudioContext | null;
   oscillator: OscillatorNode;
   gainNode: GainNode;
 }
