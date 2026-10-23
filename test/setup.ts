@@ -21,26 +21,35 @@ interface MockGainNode {
   gain: {
     value: number;
     setValueAtTime: ReturnType<typeof vi.fn>;
+    linearRampToValueAtTime: ReturnType<typeof vi.fn>;
+    cancelScheduledValues: ReturnType<typeof vi.fn>;
   };
   connect: ReturnType<typeof vi.fn>;
 }
 
 interface MockBufferSource {
-  buffer: AudioBuffer | null;
+  buffer: MockAudioBuffer | null;
   connect: ReturnType<typeof vi.fn>;
   start: ReturnType<typeof vi.fn>;
   stop: ReturnType<typeof vi.fn>;
   onended: (() => void) | null;
+  // Context time at which the source finishes playing its buffer (set by start).
+  endsAt: number | null;
+  ended: boolean;
 }
 
-// Mock Web Audio API for testing
-const createMockAudioBuffer = (): MockAudioBuffer => ({
-  duration: 1.0,
-  length: 44100,
-  numberOfChannels: 1,
-  sampleRate: 44100,
-  getChannelData: () => new Float32Array(44100)
-});
+// Mock Web Audio API for testing. The rendered buffer has the requested length
+// (silent; allocated lazily so long renders stay cheap).
+const createMockAudioBuffer = (length: number, sampleRate: number): MockAudioBuffer => {
+  let data: Float32Array | null = null;
+  return {
+    duration: length / sampleRate,
+    length,
+    numberOfChannels: 1,
+    sampleRate,
+    getChannelData: () => (data ??= new Float32Array(length))
+  };
+};
 
 const createMockOscillator = (): MockOscillator => ({
   type: 'sine',
@@ -54,24 +63,46 @@ const createMockOscillator = (): MockOscillator => ({
 const createMockGainNode = (): MockGainNode => ({
   gain: {
     value: 1,
-    setValueAtTime: vi.fn()
+    setValueAtTime: vi.fn(),
+    linearRampToValueAtTime: vi.fn(),
+    cancelScheduledValues: vi.fn()
   },
   connect: vi.fn()
 });
 
-const createMockBufferSource = (): MockBufferSource => ({
-  buffer: null,
-  connect: vi.fn(),
-  start: vi.fn(),
-  stop: vi.fn(),
-  onended: null
-});
+const endSource = (source: MockBufferSource): void => {
+  if (!source.ended) {
+    source.ended = true;
+    // Browsers dispatch 'ended' asynchronously.
+    queueMicrotask(() => source.onended?.());
+  }
+};
+
+const createMockBufferSource = (ctx: MockAudioContext): MockBufferSource => {
+  const source: MockBufferSource = {
+    buffer: null,
+    connect: vi.fn(),
+    start: vi.fn((when = 0, offset = 0) => {
+      const duration = source.buffer ? source.buffer.duration : 0;
+      source.endsAt = Math.max(when, ctx.currentTime) + Math.max(0, duration - offset);
+      ctx.sources.push(source);
+    }),
+    stop: vi.fn(() => endSource(source)),
+    onended: null,
+    endsAt: null,
+    ended: false
+  };
+  return source;
+};
+
+// Every render context the library creates, so tests can inspect the nodes of a
+// render (see test/helpers.ts).
+const offlineRenders: MockOfflineAudioContext[] = [];
 
 class MockOfflineAudioContext {
   sampleRate: number;
   destination: object;
-  oncomplete: ((event: { renderedBuffer: MockAudioBuffer }) => void) | null;
-  onerror: ((error: Error) => void) | null;
+  length: number;
   private _oscillator: MockOscillator;
   private _gainNode: MockGainNode;
 
@@ -81,11 +112,11 @@ class MockOfflineAudioContext {
       throw new Error('Failed to construct \'OfflineAudioContext\': length must be at least 1.');
     }
     this.sampleRate = sampleRate || 44100;
+    this.length = _length;
     this.destination = {};
-    this.oncomplete = null;
-    this.onerror = null;
     this._oscillator = createMockOscillator();
     this._gainNode = createMockGainNode();
+    offlineRenders.push(this);
   }
 
   createOscillator(): MockOscillator {
@@ -96,37 +127,45 @@ class MockOfflineAudioContext {
     return this._gainNode;
   }
 
-  startRendering(): Promise<void> {
-    // Simulate async rendering
-    return Promise.resolve().then(() => {
-      if (this.oncomplete) {
-        this.oncomplete({
-          renderedBuffer: createMockAudioBuffer()
-        });
-      }
-    });
-  }
-
-  addEventListener(event: string, callback: (error: Error) => void): void {
-    if (event === 'error') {
-      this.onerror = callback;
-    }
+  startRendering(): Promise<MockAudioBuffer> {
+    // Simulate async rendering.
+    return Promise.resolve().then(() => createMockAudioBuffer(this.length, this.sampleRate));
   }
 }
 
+// The clock only moves when a test calls advance(seconds), and never while the
+// context is suspended (like the real audio clock).
 class MockAudioContext {
   currentTime: number;
   state: string;
   destination: object;
+  sources: MockBufferSource[];
 
   constructor() {
     this.currentTime = 0;
     this.state = 'running';
     this.destination = {};
+    this.sources = [];
   }
 
   createBufferSource(): MockBufferSource {
-    return createMockBufferSource();
+    return createMockBufferSource(this);
+  }
+
+  createGain(): MockGainNode {
+    return createMockGainNode();
+  }
+
+  advance(seconds: number): void {
+    if (this.state !== 'running') {
+      return;
+    }
+    this.currentTime += seconds;
+    for (const source of this.sources) {
+      if (source.endsAt !== null && source.endsAt <= this.currentTime + 1e-9) {
+        endSource(source);
+      }
+    }
   }
 
   async resume(): Promise<void> {
@@ -151,11 +190,6 @@ declare const global: {
 };
 
 global.window = global.window || {};
+(globalThis as unknown as { __offlineRenders: MockOfflineAudioContext[] }).__offlineRenders = offlineRenders;
 global.window.AudioContext = MockAudioContext;
 global.window.OfflineAudioContext = MockOfflineAudioContext;
-
-// Mock URL.createObjectURL
-if (typeof URL.createObjectURL === 'undefined') {
-  URL.createObjectURL = vi.fn(() => 'blob:mock-url');
-  URL.revokeObjectURL = vi.fn();
-}

@@ -1,17 +1,15 @@
-export interface Window {
-  webkitAudioContext: typeof AudioContext;
-  webkitOfflineAudioContext: typeof OfflineAudioContext;
-}
+/// <reference lib="dom" preserve="true" />
 
 export type Characters = {
   [key: string]: Record<string, string>;
 };
 
+/** Built-in OscillatorNode waveforms ('custom' needs a PeriodicWave and is not supported). */
+export type OscillatorWaveform = Exclude<OscillatorType, 'custom'>;
+
 export interface Oscillator {
-  type?: OscillatorType;
+  type?: OscillatorWaveform;
   frequency?: number;
-  /** @deprecated Use audio.events.onended instead */
-  onended?: ((this: AudioScheduledSourceNode, ev: Event) => any) | null;
 }
 
 export interface Options {
@@ -29,6 +27,13 @@ export interface Options {
   events?: AudioEvents;
 }
 
+/** Options accepted by encode(), decode(), characters() and audio(); every field is optional. */
+export type MorseOptions = Partial<Omit<Options, 'oscillator' | 'priority'>> & {
+  /** Character set searched first, 1-12; a decimal string such as a `<select>` value ('5') also works. */
+  priority?: number | string;
+  oscillator?: Oscillator;
+};
+
 export type AudioState = 'playing' | 'paused' | 'stopped' | 'ready' | 'disposed';
 
 export interface AudioEvents {
@@ -42,24 +47,23 @@ export interface AudioEvents {
 
 export interface AudioResult {
   // Playback control
-  play: () => Promise<void>;
-  pause: () => void;
-  stop: (dispose?: boolean) => void;
-  seek: (time: number) => Promise<void>;
-  dispose: () => void;
+  readonly play: () => Promise<void>;
+  readonly pause: () => void;
+  /** Stops playback; with dispose = true also releases the rendered audio (it re-renders on the next play/export). */
+  readonly stop: (dispose?: boolean) => void;
+  readonly seek: (time: number) => Promise<void>;
+  readonly dispose: () => void;
 
   // Playback information
-  getCurrentTime: () => number;
-  getTotalTime: () => number;
-  getState: () => AudioState;
+  readonly getCurrentTime: () => number;
+  readonly getTotalTime: () => number;
+  readonly getState: () => AudioState;
 
   // Export functionality
-  getWaveBlob: () => Promise<Blob>;
-  getWaveUrl: () => Promise<string>;
-  exportWave: (filename?: string) => Promise<void>;
+  readonly getWaveBlob: () => Promise<Blob>;
+  readonly getWaveUrl: () => Promise<string>;
+  readonly exportWave: (filename?: string) => Promise<void>;
 
-  // Context access (for advanced users); null after dispose() if never created.
-  context: AudioContext | null;
-  oscillator: OscillatorNode;
-  gainNode: GainNode;
+  /** The live playback AudioContext, created on first access; null after dispose() if never created. */
+  readonly context: AudioContext | null;
 }

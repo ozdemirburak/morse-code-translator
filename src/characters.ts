@@ -21,7 +21,7 @@ const baseCharacters: Characters = {
   '4': { // Latin Extended => https://ham.stackexchange.com/questions/1379/international-characters-in-morse-code
     'Ã': '01101', 'Á': '01101', 'Å': '01101', 'À': '01101', 'Â': '01101', 'Ä': '0101',
     'Ą': '0101', 'Æ': '0101', 'Ç': '10100', 'Ć': '10100', 'Ĉ': '10100', 'Č': '110',
-    'Ð': '00110', 'È': '01001', 'Ę': '00100', 'Ë': '00100', 'É': '00100',
+    'Ð': '00110', 'È': '01001', 'É': '00100', 'Ę': '00100', 'Ë': '00100',
     'Ê': '10010', 'Ğ': '11010', 'Ĝ': '11010', 'Ĥ': '1111', 'İ': '01001', 'Ï': '10011',
     'Ì': '01110', 'Ĵ': '01110', 'Ł': '01001', 'Ń': '11011', 'Ñ': '11011', 'Ó': '1110',
     'Ò': '1110', 'Ö': '1110', 'Ô': '1110', 'Ø': '1110', 'Ś': '0001000', 'Ş': '01100',
@@ -34,7 +34,8 @@ const baseCharacters: Characters = {
     'М': '11', 'Н': '10', 'О': '111', 'П': '0110', 'Р': '010', 'С': '000',
     'Т': '1', 'У': '001', 'Ф': '0010', 'Х': '0000', 'Ц': '1010', 'Ч': '1110',
     'Ш': '1111', 'Щ': '1101', 'Ъ': '11011', 'Ы': '1011', 'Ь': '1001', 'Э': '00100',
-    'Ю': '0011', 'Я': '0101', 'Ї': '01110', 'Є': '00100', 'І': '00', 'Ґ': '110'
+    'Ю': '0011', 'Я': '0101', 'Ї': '01110', 'Є': '00100', 'І': '00', 'Ґ': '110',
+    'Ё': '0' // sent as Е
   },
   '6': { // Greek Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
     'Α': '01', 'Β': '1000', 'Γ': '110', 'Δ': '100', 'Ε': '0', 'Ζ': '1100',
@@ -46,14 +47,17 @@ const baseCharacters: Characters = {
     'א': '01', 'ב': '1000', 'ג': '110', 'ד': '100', 'ה': '111', 'ו': '0',
     'ז': '1100', 'ח': '0000', 'ט': '001', 'י': '00', 'כ': '101', 'ל': '0100',
     'מ': '11', 'נ': '10', 'ס': '1010', 'ע': '0111', 'פ': '0110', 'צ': '011',
-    'ק': '1101', 'ר': '010', 'ש': '000', 'ת': '1'
+    'ק': '1101', 'ר': '010', 'ש': '000', 'ת': '1',
+    // Final forms are positional variants of the same letters
+    'ך': '101', 'ם': '11', 'ן': '10', 'ף': '0110', 'ץ': '011'
   },
   '8': { // Arabic Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
     'ا': '01', 'ب': '1000', 'ت': '1', 'ث': '1010', 'ج': '0111', 'ح': '0000',
     'خ': '111', 'د': '100', 'ذ': '1100', 'ر': '010', 'ز': '1110', 'س': '000',
     'ش': '1111', 'ص': '1001', 'ض': '0001', 'ط': '001', 'ظ': '1011', 'ع': '0101',
     'غ': '110', 'ف': '0010', 'ق': '1101', 'ك': '101', 'ل': '0100', 'م': '11',
-    'ن': '10', 'ه': '00100', 'و': '011', 'ي': '00', 'ﺀ': '0'
+    'ن': '10', 'ه': '00100', 'و': '011', 'ي': '00', 'ء': '0',
+    'ﺀ': '0' // isolated presentation form of ء, as listed on Wikipedia
   },
   '9': { // Persian Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
     'ا': '01', 'ب': '1000', 'پ': '0110', 'ت': '1', 'ث': '1010', 'ج': '0111',
@@ -93,63 +97,80 @@ const baseCharacters: Characters = {
     'ื': '0011', 'ุ': '00101', 'ู': '1110', 'เ': '0', 'แ': '0101',
     'ไ': '01001', 'โ': '111', 'ำ': '00010', '่': '001', '้': '0001',
     '๊': '11000', '๋': '01010', 'ั': '01101', '็': '11100', '์': '11001',
-    'ๆ': '10111', 'ฯ': '11010'
+    'ๆ': '10111', 'ฯ': '11010',
+    // Letters sharing a code with a letter above (same sound)
+    'ฃ': '1010', 'ฅ': '101', 'ฆ': '101', 'ศ': '000', 'ษ': '000', 'ฌ': '1001',
+    'ฎ': '100', 'ฏ': '1', 'ฐ': '10100', 'ฑ': '10011', 'ฒ': '10011', 'ธ': '10011',
+    'ณ': '10', 'ภ': '01100', 'ฬ': '0100', 'ใ': '01001'
   }
 };
 
-const getCharacters = (options: Options) => ({
-  ...baseCharacters,
-  '0': baseCharacters[options.priority],
-  '1': {
-    ...baseCharacters['1'],
-    [options.separator]: options.space
-  }
-});
+type Tables = {
+  // Every set with '0' = the priority set, codes already in dot/dash symbols.
+  mapped: Characters;
+  // Morse code -> character, first key wins in set order ('0' first).
+  swapped: Record<string, string>;
+};
 
-const getMappedCharacters = (options: Options, usePriority: boolean) => {
+// encode()/decode() run per keystroke in typical UIs, so the derived tables are
+// cached per symbol/priority combination (bounded, oldest entry evicted first).
+const CACHE_SIZE = 16;
+const cache = new Map<string, Tables>();
+
+const getTables = (options: Options): Tables => {
+  const key = JSON.stringify([options.dot, options.dash, options.space, options.priority]);
+  const cached = cache.get(key);
+  if (cached) {
+    return cached;
+  }
   const mapped: Characters = {};
-  const characters = getCharacters(options);
-  for (const set in characters) {
+  const sets: Characters = { ...baseCharacters, '0': baseCharacters[options.priority] };
+  for (const set in sets) {
     mapped[set] = {};
-    const charSet = characters[set as keyof typeof characters];
-    if (charSet) {
-      for (const key in charSet) {
-        mapped[set][key] = charSet[key].replace(/[01]/g, (c) => (c === '0' ? options.dot : options.dash));
-      }
+    for (const character in sets[set]) {
+      // Substitute the internal 0/1 sentinels per code so dot/dash symbols that
+      // themselves contain '0'/'1' are not re-scanned.
+      mapped[set][character] = sets[set][character].replace(/[01]/g, (c) => (c === '0' ? options.dot : options.dash));
     }
   }
-  if (!usePriority) {
-    delete mapped['0'];
-  }
-  return mapped;
-};
-
-const swapCharacters = (options: Options) => {
   // Null-prototype map so user-supplied tokens can never resolve to inherited
   // Object.prototype members (e.g. "constructor") during decoding.
   const swapped: Record<string, string> = Object.create(null);
-  const mappedCharacters = getMappedCharacters(options, true);
-  for (const set in mappedCharacters) {
-    for (const key in mappedCharacters[set]) {
-      const code = mappedCharacters[set][key];
-      if (typeof swapped[code] === 'undefined') {
-        swapped[code] = key;
-      }
+  for (const set in mapped) {
+    for (const character in mapped[set]) {
+      swapped[mapped[set][character]] ??= character;
     }
   }
-  // The word-gap symbol must always decode to a literal space, independent of a
-  // custom separator (otherwise the gap decodes back to the separator string).
-  // Only override the (incorrect) separator-derived mapping, never a real
-  // character that legitimately owns this code.
-  if (typeof swapped[options.space] === 'undefined' || swapped[options.space] === options.separator) {
-    swapped[options.space] = ' ';
+  // The word-gap symbol always decodes to a literal space. Validation keeps it
+  // from looking like a code, so it never shadows a real character.
+  swapped[options.space] = ' ';
+  if (cache.size >= CACHE_SIZE) {
+    cache.delete(cache.keys().next().value as string);
   }
-  return swapped;
+  const tables = { mapped, swapped };
+  cache.set(key, tables);
+  return tables;
+};
+
+// Internal: the cached tables must be treated as read-only.
+const getEncodeCharacters = (options: Options): Characters => getTables(options).mapped;
+const swapCharacters = (options: Options): Record<string, string> => getTables(options).swapped;
+
+// Public copy for characters(); callers may mutate it freely.
+const getMappedCharacters = (options: Options, usePriority: boolean): Characters => {
+  const copy: Characters = {};
+  const { mapped } = getTables(options);
+  for (const set in mapped) {
+    if (set !== '0' || usePriority) {
+      copy[set] = { ...mapped[set] };
+    }
+  }
+  return copy;
 };
 
 export {
   baseCharacters,
-  getCharacters,
+  getEncodeCharacters,
   getMappedCharacters,
   swapCharacters
 };

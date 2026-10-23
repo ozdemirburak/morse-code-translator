@@ -3,11 +3,9 @@ node_modules
 
 # Build output
 dist
-*.tsbuildinfo
 
 # Test coverage
 coverage
-.nyc_output
 
 # Demo environment
 demo
@@ -32,3 +30,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Packed tarballs
+*.tgz

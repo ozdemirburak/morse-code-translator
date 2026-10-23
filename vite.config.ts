@@ -1,6 +1,5 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import dts from 'vite-plugin-dts';
+import { defineConfig } from 'vitest/config';
+import { resolve } from 'node:path';
 
 export default defineConfig({
   build: {
@@ -8,9 +7,11 @@ export default defineConfig({
       entry: resolve(import.meta.dirname, 'src/index.ts'),
       name: 'MorseCodeTranslator',
       formats: ['es', 'umd'],
+      // Node and bundlers use the ES build (Node >= 22.12 can also require() it);
+      // the UMD build is only for <script> tags and CDNs.
       fileName: (format) => `morse-code-translator.${format}.js`,
     },
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         exports: 'named',
       },
@@ -18,15 +19,12 @@ export default defineConfig({
     sourcemap: true,
     outDir: 'dist',
   },
-  plugins: [
-    dts({
-      outDir: 'dist',
-      insertTypesEntry: true,
-    }),
-  ],
   test: {
-    globals: true,
     environment: 'happy-dom',
     setupFiles: ['./test/setup.ts'],
+    coverage: {
+      include: ['src/**/*.ts'],
+      thresholds: { lines: 95, branches: 90 },
+    },
   },
 });

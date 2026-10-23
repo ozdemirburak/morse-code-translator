@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as morse from '../src/index';
-import type { AudioResult } from '../src/types';
+import type { AudioResult, OscillatorWaveform } from '../src/types';
+import { firstRender, rampTargets } from './helpers';
 
 describe('audio', () => {
   let audioInstance: AudioResult;
@@ -16,28 +17,22 @@ describe('audio', () => {
     expect(audioInstance.getWaveBlob).toBeTypeOf('function');
     expect(audioInstance.getWaveUrl).toBeTypeOf('function');
     expect(audioInstance.exportWave).toBeTypeOf('function');
-    expect(audioInstance.context).toBeDefined();
-    expect(audioInstance.oscillator).toBeDefined();
-    expect(audioInstance.gainNode).toBeDefined();
+    expect(audioInstance.context).not.toBeNull();
   });
 
   it('creates audio with custom options', () => {
-    const customAudio = morse.audio('HELLO', {
-      wpm: 20,
-      volume: 50,
-      oscillator: {
-        frequency: 600,
-        type: 'square'
-      }
-    });
-
-    expect(customAudio).toBeDefined();
-    expect(customAudio.context).toBeDefined();
+    const options = { wpm: 20, volume: 50, oscillator: { frequency: 600, type: 'square' as const } };
+    const render = firstRender(() => morse.audio('HELLO', options));
+    expect(render.oscillator.type).toBe('square');
+    expect(render.oscillator.frequency.value).toBe(600);
+    expect(Math.max(...rampTargets(() => morse.audio('HELLO', options)))).toBe(0.5);
+    // HELLO at 20 wpm (0.06 s units): H 7 + 3 + E 1 + 3 + L 9 + 3 + L 9 + 3 + O 11 = 49 units
+    expect(morse.audio('HELLO', options).getTotalTime()).toBeCloseTo(49 * 0.06, 10);
   });
 
   it('creates audio from custom morse string', () => {
-    const customAudio = morse.audio('TEST', {}, '- . ... -');
-    expect(customAudio).toBeDefined();
+    // The morse string wins over the text: '.' is one 1-unit dot.
+    expect(morse.audio('TEST', {}, '.').getTotalTime()).toBeCloseTo(0.08, 10);
   });
 
   it('generates wave blob', async () => {
@@ -68,14 +63,15 @@ describe('audio', () => {
       return originalCreateElement(tag);
     }) as typeof document.createElement;
 
-    await audioInstance.exportWave('test-morse.wav');
+    try {
+      await audioInstance.exportWave('test-morse.wav');
 
-    expect(mockAnchor.click).toHaveBeenCalled();
-    expect(mockAnchor.download).toBe('test-morse.wav');
-    expect(mockAnchor.href).toMatch(/^blob:/);
-
-    // Restore original
-    document.createElement = originalCreateElement;
+      expect(mockAnchor.click).toHaveBeenCalled();
+      expect(mockAnchor.download).toBe('test-morse.wav');
+      expect(mockAnchor.href).toMatch(/^blob:/);
+    } finally {
+      document.createElement = originalCreateElement;
+    }
   });
 
   it('exports wave with default filename', async () => {
@@ -92,94 +88,76 @@ describe('audio', () => {
       return originalCreateElement(tag);
     }) as typeof document.createElement;
 
-    await audioInstance.exportWave();
-
-    expect(mockAnchor.download).toBe('morse.wav');
-
-    document.createElement = originalCreateElement;
+    try {
+      await audioInstance.exportWave();
+      expect(mockAnchor.download).toBe('morse.wav');
+    } finally {
+      document.createElement = originalCreateElement;
+    }
   });
 
   it('handles different wpm speeds', () => {
-    const slowAudio = morse.audio('TEST', { wpm: 5 });
-    const fastAudio = morse.audio('TEST', { wpm: 30 });
-
-    expect(slowAudio).toBeDefined();
-    expect(fastAudio).toBeDefined();
+    // TEST: T(3) + gap(3) + E(1) + gap(3) + S(5) + gap(3) + T(3) = 21 units; unit = 1.2 / wpm
+    expect(morse.audio('TEST', { wpm: 5 }).getTotalTime()).toBeCloseTo(21 * 0.24, 10);
+    expect(morse.audio('TEST', { wpm: 30 }).getTotalTime()).toBeCloseTo(21 * 0.04, 10);
   });
 
   it('handles different oscillator types', () => {
-    const types: OscillatorType[] = ['sine', 'square', 'sawtooth', 'triangle'];
+    const types: OscillatorWaveform[] = ['sine', 'square', 'sawtooth', 'triangle'];
 
     types.forEach(type => {
-      const audio = morse.audio('A', {
-        oscillator: { type }
-      });
-      expect(audio).toBeDefined();
+      expect(firstRender(() => morse.audio('A', { oscillator: { type } })).oscillator.type).toBe(type);
     });
   });
 
   it('handles custom volume', () => {
-    const quietAudio = morse.audio('TEST', { volume: 25 });
-    const loudAudio = morse.audio('TEST', { volume: 100 });
-
-    expect(quietAudio).toBeDefined();
-    expect(loudAudio).toBeDefined();
+    const toneLevel = (volume: number) => Math.max(...rampTargets(() => morse.audio('TEST', { volume })));
+    expect(toneLevel(25)).toBe(0.25);
+    expect(toneLevel(100)).toBe(1);
   });
 
   it('handles custom frequency', () => {
-    const lowFreq = morse.audio('TEST', {
-      oscillator: { frequency: 300 }
-    });
-    const highFreq = morse.audio('TEST', {
-      oscillator: { frequency: 1000 }
-    });
+    const lowFreq = firstRender(() => morse.audio('TEST', { oscillator: { frequency: 300 } }));
+    const highFreq = firstRender(() => morse.audio('TEST', { oscillator: { frequency: 1000 } }));
 
-    expect(lowFreq).toBeDefined();
-    expect(highFreq).toBeDefined();
+    expect(lowFreq.oscillator.frequency.value).toBe(300);
+    expect(highFreq.oscillator.frequency.value).toBe(1000);
   });
 
   it('handles onended callback', async () => {
     const onendedMock = vi.fn();
-    const audio = morse.audio('A', {
-      oscillator: {
-        onended: onendedMock
-      }
-    });
+    const audio = morse.audio('A', { events: { onended: onendedMock } });
 
-    expect(audio).toBeDefined();
-    // The callback would be called when audio ends, but we can't easily test timing here
+    await audio.play();
+    (audio.context as unknown as { advance: (s: number) => void }).advance(audio.getTotalTime());
+    await Promise.resolve();
+    expect(onendedMock).toHaveBeenCalledTimes(1);
   });
 
-  it('generates audio for different morse lengths', async () => {
-    // Note: With mocked Audio API, we can't test actual timing differences
-    // but we can verify both short and long morse code generate valid audio
-    const shortAudio = morse.audio('E'); // Single dot
-    const longAudio = morse.audio('SOS'); // ... --- ...
-
-    const shortBlob = await shortAudio.getWaveBlob();
-    const longBlob = await longAudio.getWaveBlob();
-
-    expect(shortBlob).toBeInstanceOf(Blob);
-    expect(longBlob).toBeInstanceOf(Blob);
+  it('generates WAV data whose length follows the morse length', async () => {
+    const shortBlob = await morse.audio('E').getWaveBlob(); // one dot: 1 unit
+    const longBlob = await morse.audio('SOS').getWaveBlob(); // 27 units
     expect(shortBlob.type).toBe('audio/wav');
-    expect(longBlob.type).toBe('audio/wav');
+    expect(shortBlob.size).toBe(44 + Math.ceil(0.08 * 44100) * 2);
+    expect(longBlob.size).toBe(44 + Math.ceil(2.16 * 44100) * 2);
   });
 
   it('handles different character sets in audio', () => {
-    const latinAudio = morse.audio('HELLO');
-    const cyrillicAudio = morse.audio('ПРИВЕТ', { priority: 5 });
-    const arabicAudio = morse.audio('مرحبا', { priority: 8 });
-
-    expect(latinAudio).toBeDefined();
-    expect(cyrillicAudio).toBeDefined();
-    expect(arabicAudio).toBeDefined();
+    // Each script renders the timing of its own encoding (no '#' skipped).
+    for (const [text, priority] of [['HELLO', 1], ['ПРИВЕТ', 5], ['مرحبا', 8]] as const) {
+      const encoded = morse.encode(text, { priority });
+      expect(encoded).not.toContain('#');
+      expect(morse.audio(text, { priority }).getTotalTime()).toBe(morse.audio('', { priority }, encoded).getTotalTime());
+      expect(morse.audio(text, { priority }).getTotalTime()).toBeGreaterThan(1);
+    }
   });
 
   it('can play and stop audio', async () => {
-    // Note: In happy-dom, actual audio playback won't work,
-    // but we can verify the methods don't throw errors
-    await expect(audioInstance.play()).resolves.not.toThrow();
-    expect(() => audioInstance.stop()).not.toThrow();
+    await audioInstance.play();
+    expect(audioInstance.getState()).toBe('playing');
+    audioInstance.stop();
+    expect(audioInstance.getState()).toBe('stopped');
+    expect(audioInstance.getCurrentTime()).toBe(0);
   });
 
   describe('State Management', () => {
@@ -238,12 +216,10 @@ describe('audio', () => {
   });
 
   describe('Seek Functionality', () => {
-    it('can seek to specific time', () => {
-      const totalTime = audioInstance.getTotalTime();
-      const halfTime = totalTime / 2;
-
-      audioInstance.seek(halfTime);
-      expect(audioInstance.getCurrentTime()).toBeCloseTo(halfTime, 2);
+    it('can seek to specific time', async () => {
+      const halfTime = audioInstance.getTotalTime() / 2;
+      await audioInstance.seek(halfTime);
+      expect(audioInstance.getCurrentTime()).toBe(halfTime);
     });
 
     it('clamps seek time to valid range', () => {
@@ -269,9 +245,26 @@ describe('audio', () => {
       audioInstance.stop();
     });
 
-    it('stays paused after seek if was paused', () => {
-      audioInstance.seek(0.5);
-      expect(audioInstance.getState()).not.toBe('playing');
+    it('stays paused after seek if was paused', async () => {
+      await audioInstance.play();
+      audioInstance.pause();
+      await audioInstance.seek(0.5);
+      expect(audioInstance.getState()).toBe('paused');
+      expect(audioInstance.getCurrentTime()).toBe(0.5);
+    });
+    it('phantom word gaps are not emitted for empty words (round6)', () => {
+      // Leading/trailing/doubled word separators must not add WORD_GAP silence.
+      const baseline = morse.audio('', {}, '.- / -...').getTotalTime();
+      expect(morse.audio('', {}, '/ .-').getTotalTime()).toBeCloseTo(0.4, 5); // 'A' only = 5 units
+      expect(morse.audio('', {}, '.- // -...').getTotalTime()).toBeCloseTo(baseline, 5);
+    });
+
+    it('clamps seek(Infinity) to the end, not the start (round6)', async () => {
+      const total = audioInstance.getTotalTime();
+      await audioInstance.seek(Infinity);
+      expect(audioInstance.getCurrentTime()).toBeCloseTo(total, 5);
+      await audioInstance.seek(-Infinity);
+      expect(audioInstance.getCurrentTime()).toBe(0);
     });
   });
 
@@ -288,22 +281,19 @@ describe('audio', () => {
 
     it('getCurrentTime() updates during playback', async () => {
       await audioInstance.play();
-      const time1 = audioInstance.getCurrentTime();
-
-      // Wait a bit (note: in mocked environment, time may not progress naturally)
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      const time2 = audioInstance.getCurrentTime();
-      // In real environment, time2 should be >= time1
-      expect(time2).toBeGreaterThanOrEqual(time1);
+      expect(audioInstance.getCurrentTime()).toBe(0);
+      (audioInstance.context as unknown as { advance: (s: number) => void }).advance(0.2);
+      expect(audioInstance.getCurrentTime()).toBeCloseTo(0.2, 10);
 
       audioInstance.stop();
     });
 
     it('getCurrentTime() returns pausedAt time when paused', async () => {
-      await audioInstance.seek(0.1);
-      const pausedTime = audioInstance.getCurrentTime();
-      expect(pausedTime).toBeCloseTo(0.1, 2);
+      await audioInstance.play();
+      (audioInstance.context as unknown as { advance: (s: number) => void }).advance(0.1);
+      audioInstance.pause();
+      expect(audioInstance.getState()).toBe('paused');
+      expect(audioInstance.getCurrentTime()).toBeCloseTo(0.1, 10);
     });
   });
 
@@ -314,8 +304,7 @@ describe('audio', () => {
         events: { onready }
       });
 
-      await new Promise(resolve => setTimeout(resolve, 100));
-      expect(onready).toHaveBeenCalled();
+      await vi.waitFor(() => expect(onready).toHaveBeenCalledTimes(1));
     });
 
     it('fires onstarted event when playback starts', async () => {
@@ -351,26 +340,18 @@ describe('audio', () => {
       expect(onstopped).toHaveBeenCalled();
     });
 
-    it('fires onseeked event when seeking', () => {
+    it('fires onseeked event when seeking', async () => {
       const onseeked = vi.fn();
       const audio = morse.audio('A', {
         events: { onseeked }
       });
 
-      const totalTime = audio.getTotalTime();
-      const seekTime = totalTime / 2;
-      audio.seek(seekTime);
+      const seekTime = audio.getTotalTime() / 2;
+      await audio.seek(seekTime);
+      expect(onseeked).toHaveBeenCalledTimes(1);
       expect(onseeked).toHaveBeenCalledWith(seekTime);
     });
 
-    it('supports backwards compatible onended in oscillator options', () => {
-      const onended = vi.fn();
-      const audio = morse.audio('A', {
-        oscillator: { onended }
-      });
-
-      expect(audio).toBeDefined();
-    });
   });
 
   describe('Dispose', () => {
@@ -397,27 +378,11 @@ describe('audio', () => {
       expect(instance.getCurrentTime()).toBe(0);
     });
 
-    it('phantom word gaps are not emitted for empty words (round6)', () => {
-      // Leading/trailing/doubled word separators must not add WORD_GAP silence.
-      const baseline = morse.audio('', {}, '.- / -...').getTotalTime();
-      expect(morse.audio('', {}, '/ .-').getTotalTime()).toBeCloseTo(0.4, 5); // 'A' only = 5 units
-      expect(morse.audio('', {}, '.- // -...').getTotalTime()).toBeCloseTo(baseline, 5);
-    });
-
-    it('clamps seek(Infinity) to the end, not the start (round6)', async () => {
-      const total = audioInstance.getTotalTime();
-      await audioInstance.seek(Infinity);
-      expect(audioInstance.getCurrentTime()).toBeCloseTo(total, 5);
-      await audioInstance.seek(-Infinity);
-      expect(audioInstance.getCurrentTime()).toBe(0);
-    });
-
-    it('stop(true) disposes buffer', async () => {
+    it('stop(true) releases the rendered audio and re-renders on demand', async () => {
       await audioInstance.play();
       audioInstance.stop(true);
       expect(audioInstance.getState()).toBe('stopped');
-      // The rendered buffer must actually be gone (distinguishes it from stop(false)).
-      await expect(audioInstance.getWaveBlob()).rejects.toThrow();
+      await expect(audioInstance.getWaveBlob()).resolves.toBeInstanceOf(Blob);
     });
 
     it('stop() without dispose keeps buffer', async () => {
@@ -476,15 +441,13 @@ describe('audio', () => {
     });
 
     it('produces audio for multi-character dot/dash symbols (B11)', () => {
-      const instance = morse.audio('E', { dot: '<>' }); // E => single dot
-      expect(instance.getTotalTime()).toBeGreaterThan(0);
+      expect(morse.audio('E', { dot: '<>' }).getTotalTime()).toBeGreaterThan(0); // E => single dot
       // Must emit an actual tone, not merely advance time via silence.
-      const calls = (instance.gainNode.gain.setValueAtTime as ReturnType<typeof vi.fn>).mock.calls;
-      expect(calls.some((call) => call[0] > 0)).toBe(true);
+      expect(rampTargets(() => morse.audio('E', { dot: '<>' })).some((level) => level > 0)).toBe(true);
     });
 
-    it('keeps totalTime finite for an absurdly large unit (round3 #3)', () => {
-      expect(Number.isFinite(morse.audio('SOS', { unit: 1e308 }).getTotalTime())).toBe(true);
+    it('rejects an absurdly large unit instead of rendering it (round3 #3)', () => {
+      expect(() => morse.audio('SOS', { unit: 1e308 })).toThrow(RangeError);
     });
 
     it('keeps default timing unchanged after the tokenizer rewrite (B11)', () => {
@@ -497,7 +460,7 @@ describe('audio', () => {
       const instance = morse.audio('SOS', { events: { onstarted } });
 
       // Count actual buffer-source starts, not just the onstarted event.
-      const ctx = instance.context;
+      const ctx = instance.context as AudioContext;
       const originalCreate = ctx.createBufferSource.bind(ctx);
       let startCount = 0;
       ctx.createBufferSource = (() => {
@@ -533,26 +496,34 @@ describe('audio', () => {
       expect(audioInstance.getState()).toBe('stopped');
     });
 
-    it('tokenizes prefix-colliding multi-char symbols by longest match (B11)', () => {
-      // 'T' => one dash (3 units); dash '...' must win over its dot prefix '..'.
-      expect(morse.audio('T', { dot: '..', dash: '...' }).getTotalTime()).toBeCloseTo(0.24, 5);
+    it('rejects prefix-colliding dot/dash symbols, which make codes ambiguous (B11)', () => {
+      expect(() => morse.audio('T', { dot: '..', dash: '...' })).toThrow(/prefix/);
     });
 
-    it('rejects non-finite unit instead of allocating an infinite buffer (B12)', () => {
+    it('ignores a non-finite unit/fwUnit and uses the default (B12)', () => {
       expect(morse.audio('SOS', { unit: Infinity }).getTotalTime()).toBeCloseTo(2.16, 5);
       expect(morse.audio('SOS', { fwUnit: Infinity }).getTotalTime()).toBeCloseTo(2.16, 5);
     });
 
     it('does not crash on a non-finite or non-numeric oscillator frequency (round1 #2)', () => {
       expect(() => morse.audio('SOS', { oscillator: { frequency: Infinity } })).not.toThrow();
-      const a = morse.audio('SOS', { oscillator: { frequency: Infinity } });
-      expect(a.oscillator.frequency.value).toBe(500);
+      expect(firstRender(() => morse.audio('SOS', { oscillator: { frequency: Infinity } })).oscillator.frequency.value).toBe(500);
     });
 
-    it('clamps totalTime (and thus the buffer) for degenerate timing (round1 #6 / round3 #3)', () => {
-      // The totalTime clamp (MAX_TOTAL_SECONDS = 3600) bounds the buffer length.
-      expect(morse.audio('SOS', { unit: 1e9 }).getTotalTime()).toBe(3600);
-      expect(morse.audio('SOS', { wpm: 1e-9 }).getTotalTime()).toBe(3600);
+    it('handles degenerate timing lazily instead of silently clamping it (round1 #6 / round3 #3)', async () => {
+      const renders = (globalThis as unknown as { __offlineRenders: Array<{ length: number }> }).__offlineRenders;
+      const before = renders.length;
+      const huge = morse.audio('SOS', { unit: 1e9 });
+      expect(huge.getTotalTime()).toBe(27e9);
+      expect(morse.audio('SOS', { wpm: 1e-9 }).getTotalTime()).toBeCloseTo(27 * 1.2e9, -3);
+      // Only the first chunk (at most two 30 s targets) is rendered up front.
+      expect(renders.length - before).toBe(2);
+      expect(renders[before].length).toBeLessThanOrEqual(2 * 30 * 44100);
+      // Too long for a RIFF file: a clear error instead of a truncated file.
+      await expect(huge.getWaveBlob()).rejects.toThrow(/too long for a WAV file/);
+      await huge.play();
+      expect(huge.getState()).toBe('playing');
+      huge.dispose();
     });
 
     it('sanitizes seek(NaN) instead of corrupting state (round5 #2)', async () => {
@@ -569,7 +540,7 @@ describe('audio', () => {
     it('throws deterministically on getWaveBlob() after dispose (round5 #3)', async () => {
       const instance = morse.audio('E');
       instance.dispose();
-      await expect(instance.getWaveBlob()).rejects.toThrow();
+      await expect(instance.getWaveBlob()).rejects.toThrow(/Audio buffer not available/);
     });
 
     it('honors pause() called during an in-flight play() (round2 #1)', async () => {
@@ -646,7 +617,8 @@ describe('audio', () => {
         await instance.play();
         expect(instance.getState()).toBe('playing');
 
-        vi.advanceTimersByTime(instance.getTotalTime() * 1000 + 50);
+        (instance.context as unknown as { advance: (s: number) => void }).advance(instance.getTotalTime());
+        await Promise.resolve();
 
         expect(onended).toHaveBeenCalledTimes(1);
         expect(onstopped).not.toHaveBeenCalled();
@@ -657,22 +629,17 @@ describe('audio', () => {
     });
 
     it('preserves volume:0 (mute) instead of defaulting to full volume (B7)', () => {
-      const muted = morse.audio('E', { volume: 0 });
-      const mutedCalls = (muted.gainNode.gain.setValueAtTime as ReturnType<typeof vi.fn>).mock.calls;
-      expect(mutedCalls.length).toBeGreaterThan(0);
-      expect(mutedCalls.every((call) => call[0] === 0)).toBe(true);
+      const muted = rampTargets(() => morse.audio('E', { volume: 0 }));
+      expect(muted.length).toBeGreaterThan(0);
+      expect(muted.every((level) => level === 0)).toBe(true);
 
       // Contrast: full volume produces a tone gain of 1.
-      const loud = morse.audio('E', { volume: 100 });
-      const loudCalls = (loud.gainNode.gain.setValueAtTime as ReturnType<typeof vi.fn>).mock.calls;
-      expect(loudCalls.some((call) => call[0] === 1)).toBe(true);
+      expect(rampTargets(() => morse.audio('E', { volume: 100 }))).toContain(1);
     });
 
-    it('rejects a negative wpm instead of producing a negative buffer (B12)', () => {
-      // negative wpm previously yielded a negative buffer length; it now falls
-      // back to the default unit and renders a valid buffer.
-      expect(() => morse.audio('SOS', { wpm: -5 })).not.toThrow();
-      expect(morse.audio('SOS', { wpm: -5 }).getTotalTime()).toBeGreaterThan(0);
+    it('ignores a negative wpm and uses the default unit (B12)', () => {
+      // A negative wpm once gave a negative buffer length.
+      expect(morse.audio('SOS', { wpm: -5 }).getTotalTime()).toBeCloseTo(2.16, 10);
     });
 
     it('revokes the internally-created object URL after export (B17)', async () => {
