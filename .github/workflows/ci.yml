@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22.12.0', 22, 24, 26] # 22.12.0 is the lowest version engines allows
+    steps:
+      - uses: actions/checkout@v7
+      # No npm cache: setup-node runs `npm config get cache` in the project
+      # before npm is upgraded, and npm 10 refuses it because of devEngines.
+      # setup-node v7 caches by itself when package.json names a package
+      # manager (devEngines.packageManager), so turn that off explicitly.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      # devEngines needs npm >= 11.10 (min-release-age); Node 22 ships npm 10.
+      - run: npm install -g npm@11
+      - run: npm ci
+      - run: npm run build # vite build, declarations, typecheck of tests
+      - run: npm run test:coverage # includes the package contract tests
+      - run: npm pack
+      - uses: actions/upload-artifact@v7
+        if: matrix.node == 24
+        with:
+          name: tarball
+          path: '*.tgz'
+
+  consume:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22.12.0', 22, 24, 26] # engines: >=22.12 (require(esm) is on by default)
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: tarball
+      - name: Install the tarball in a new project
+        run: |
+          mkdir consumer && cd consumer && npm init -y > /dev/null
+          npm install ../*.tgz typescript@7
+      - name: ESM and require(esm) smoke test
+        working-directory: consumer
+        run: |
+          node --input-type=module -e "import m, { encode } from '@ozdemirburak/morse-code-translator'; if (encode('SOS') !== '... --- ...' || m.decode('... --- ...') !== 'SOS') process.exit(1)"
+          node -e "const m = require('@ozdemirburak/morse-code-translator'); if (m.encode('SOS') !== '... --- ...') process.exit(1); if (globalThis.MorseCodeTranslator) process.exit(2)"
+      - name: TypeScript consumers (ESM and CommonJS, nodenext)
+        working-directory: consumer
+        run: |
+          printf "import { encode, type MorseOptions } from '@ozdemirburak/morse-code-translator';\nconst options: MorseOptions = { wpm: 20 };\nconst code: string = encode('A', options);\n" > esm.mts
+          printf "import morse = require('@ozdemirburak/morse-code-translator');\nconst code: string = morse.encode('A');\n" > cjs.cts
+          npx tsc --noEmit --strict --module nodenext --moduleResolution nodenext --types '' esm.mts cjs.cts

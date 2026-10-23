@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3 # matches .npmrc min-release-age=3
+    groups:
+      dev-dependencies:
+        dependency-type: development
+    ignore:
+      # @types/node follows the Node LTS line (.nvmrc), not the newest Node major
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
