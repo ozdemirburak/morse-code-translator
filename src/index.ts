@@ -3,7 +3,7 @@ import { tokenize } from './tokenize.js';
 import getOptions, { assertString } from './options.js';
 import getAudio from './audio.js';
 import { normalizeText } from './normalize.js';
-import type { MorseOptions, Characters, AudioResult } from './types.js';
+import type { MorseOptions, Options, Characters, AudioResult } from './types.js';
 
 // One visible character (an emoji with modifiers, a letter with marks) that has
 // no code becomes ONE invalid marker, not one per code point. Engines without
@@ -26,9 +26,8 @@ const INVISIBLE = /^\p{Default_Ignorable_Code_Point}$/u;
 // JavaScript's \s also matches U+FEFF, which Unicode does not count as whitespace.
 const WHITESPACE = /[^\S\uFEFF]+/g;
 
-export const encode = (text: string, opts?: MorseOptions | null): string => {
-  assertString(text, 'text');
-  const options = getOptions(opts);
+// encode() with resolved options (audio() resolves them once for both).
+const encodeWith = (text: string, options: Options): string => {
   const characters = getEncodeCharacters(options);
   const lookup = (character: string): string | undefined => {
     for (const set in characters) {
@@ -71,6 +70,11 @@ export const encode = (text: string, opts?: MorseOptions | null): string => {
   return codes.join(options.separator);
 };
 
+export const encode = (text: string, opts?: MorseOptions | null): string => {
+  assertString(text, 'text');
+  return encodeWith(text, getOptions(opts));
+};
+
 export const decode = (morse: string, opts?: MorseOptions | null): string => {
   assertString(morse, 'morse');
   const options = getOptions(opts);
@@ -85,14 +89,15 @@ export const characters = (options?: MorseOptions | null, usePriority: boolean =
   return getMappedCharacters(getOptions(options), usePriority);
 };
 
-export const audio = (text: string, opts?: MorseOptions | null, morseString?: string): AudioResult => {
+export const audio = (text: string, opts?: MorseOptions | null, morseString?: string | null): AudioResult => {
   const options = getOptions(opts);
-  // An explicit morse string (even '') wins; otherwise encode the text.
-  if (morseString !== undefined) {
+  // An explicit morse string (even '') wins; null/undefined encode the text.
+  if (morseString !== undefined && morseString !== null) {
     assertString(morseString, 'morseString');
+    return getAudio(morseString, options);
   }
-  const morse = morseString ?? encode(text, opts);
-  return getAudio(morse, options);
+  assertString(text, 'text');
+  return getAudio(encodeWith(text, options), options);
 };
 
 // Export types

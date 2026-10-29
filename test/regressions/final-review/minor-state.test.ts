@@ -48,9 +48,10 @@ describe('regression: minor state leftovers', () => {
       (e: unknown) => `rejected: ${String(e)}`
     );
     await flush();
-    // Release every chunk before the last one; the export then renders the last.
-    for (let i = 0; i < starts.length && held.byStart(last).length === 0; i++) {
-      for (const r of held.pending()) r.release();
+    // Release every chunk before the last one; the export then renders the last
+    // (it keeps two chunks rendering, so release all others until only it is left).
+    for (let i = 0; i < 2 * starts.length && !(held.byStart(last).length === 1 && held.pending().length === 1); i++) {
+      for (const r of held.pending()) if (r.start !== last) r.release();
       await flush();
     }
     expect({ last: held.byStart(last).length, all: held.pending().length }).toEqual({ last: 1, all: 1 });
@@ -63,8 +64,9 @@ describe('regression: minor state leftovers', () => {
     await flush();
     // Observed: late = 'resolved' (a Blob from a disposed instance).
     // Expected: 'rejected: Error: Audio buffer not available', as without an export in flight.
+    // (8.0.1: the export that dispose() interrupted rejects the same way.)
     expect({ first: await first, late: await late }).toEqual({
-      first: 'resolved',
+      first: 'rejected: Error: Audio buffer not available',
       late: 'rejected: Error: Audio buffer not available',
     });
   });
