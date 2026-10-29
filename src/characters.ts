@@ -165,6 +165,9 @@ const getMappedCharacters = (options: Options, usePriority: boolean): Characters
       copy[set] = { ...mapped[set] };
     }
   }
+  // Like 7.x: the separator maps to the word-gap symbol in set '1', so a custom
+  // encoder built from this table keeps word gaps (encode() handles it itself).
+  copy['1'][options.separator] = options.space;
   return copy;
 };
 

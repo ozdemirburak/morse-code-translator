@@ -19,9 +19,10 @@ describe('numeric options', () => {
     expect(getOptions({ volume: 42 }).volume).toBe(42);
   });
 
-  it('treats a frequency above the 22050 Hz Nyquist limit as invalid', () => {
+  it('treats a frequency at or above the 22050 Hz Nyquist limit as invalid', () => {
     expect(getOptions({ oscillator: { frequency: 30000 } }).oscillator.frequency).toBe(500);
-    expect(getOptions({ oscillator: { frequency: 22050 } }).oscillator.frequency).toBe(22050);
+    expect(getOptions({ oscillator: { frequency: 22050 } }).oscillator.frequency).toBe(500);
+    expect(getOptions({ oscillator: { frequency: 22049.5 } }).oscillator.frequency).toBe(22049.5);
   });
 });
 

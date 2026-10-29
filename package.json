@@ -1,6 +1,6 @@
 {
   "name": "@ozdemirburak/morse-code-translator",
-  "version": "8.0.0",
+  "version": "8.0.1",
   "description": "Morse code translator helps you convert text to Morse code and vice versa, with the option to play Morse code audio.",
   "keywords": [
     "morse",
@@ -23,12 +23,12 @@
     "url": "git+https://github.com/ozdemirburak/morse-code-translator.git"
   },
   "devDependencies": {
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "^5.0.5",
-    "happy-dom": "^21.0.3",
+    "happy-dom": "^21.0.4",
     "node-web-audio-api": "^2.2.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4",
+    "vite": "^8.3.5",
     "vitest": "^5.0.5"
   },
   "type": "module",

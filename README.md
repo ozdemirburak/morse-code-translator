@@ -61,7 +61,8 @@ const blob = await audio.getWaveBlob(); // get audio wave blob (promise)
 
 audio.dispose();              // release everything; the instance cannot be used after this
 
-// Play your own Morse instead of encoding text (any whitespace separates characters)
+// Play your own Morse instead of encoding text (any whitespace separates characters;
+// null or undefined encodes the text instead, '' plays silence)
 const custom = morse.audio('', {}, '... --- ...');
 ```
 
@@ -137,7 +138,7 @@ arabicAudio.stop();       // will stop and reset to beginning
 | `wpm` | – | Words per minute (PARIS); overrides `unit` and `fwUnit`. |
 | `volume` | `100` | 0-100, out-of-range values are clamped. |
 | `oscillator.type` | `'sine'` | `sine`, `square`, `sawtooth` or `triangle`. |
-| `oscillator.frequency` | `500` | Hertz, up to 22050. |
+| `oscillator.frequency` | `500` | Hertz, from 1 to below 22050 (the Nyquist frequency of the 44.1 kHz render); other values fall back to 500. |
 | `events` | – | `onready`, `onstarted`, `onpaused`, `onstopped`, `onended`, `onseeked(time)`. |
 
 Invalid symbol options throw an error (they would corrupt the output); invalid numeric options fall back
@@ -168,7 +169,7 @@ Decoding returns the base forms.
 Audio is rendered in chunks of about 30 seconds, so long texts play and export in full without one huge
 buffer. Tones have 5 ms attack and release ramps, and playback fades in and out on play, pause, seek and stop,
 so there are no clicks. `onended` follows the audio clock. Playback and WAV export together render at most
-two chunks at a time, so seeking through a long text stays cheap; a chunk that fails to render is tried
+two chunks at a time (playback renders go first), so seeking through a long text stays cheap; a chunk that fails to render is tried
 again before playback stops. While `seek()` resumes playback, `getState()` stays `'playing'`. `play()`
 creates and resumes the live `AudioContext` at once, inside the user gesture that called it, and
 `dispose()` closes it after the stop fade. WAV export is limited by the format to about 13.5 hours, and it
@@ -194,10 +195,9 @@ or during server-side rendering `audio()` throws, because there is no Web Audio 
   be used as `separator`.
 - A custom separator no longer interacts with the text: `separator: 'x'` keeps word gaps (it used to
   turn them into the letter X).
-- `priority` accepts numeric strings; `volume` is clamped; a frequency above 22050 Hz falls back to 500.
-- `characters()` no longer includes the internal separator entry.
+- `priority` accepts numeric strings; `volume` is clamped; a frequency below 1 Hz or of 22050 Hz and above falls back to 500.
 - Audio: no 1-hour limit, ramps at tone edges, unknown characters add no silence, whitespace in a custom
-  Morse string separates characters, an explicit `''` Morse string is honored, `onstopped` also fires
+  Morse string separates characters, an explicit `''` Morse string is honored (`null` encodes the text), `onstopped` also fires
   when stopping from pause, `stop(true)` re-renders on the next play, and a throwing event callback is
   logged instead of breaking the instance.
 - Removed: `audio.oscillator` and `audio.gainNode` (they never affected playback), the deprecated

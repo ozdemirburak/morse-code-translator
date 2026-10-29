@@ -1,9 +1,13 @@
 import type { MorseOptions, Options } from './types.js';
 import { baseCharacters } from './characters.js';
+import { scanCode } from './tokenize.js';
 
-// Highest frequency a 44.1 kHz render can represent (Nyquist); above it the
-// oscillator renders pure silence.
-const MAX_FREQUENCY = 22050;
+// Nyquist frequency of the 44.1 kHz render; at or above it the oscillator
+// renders only zero samples (it starts at a zero-phase point).
+const NYQUIST_FREQUENCY = 22050;
+// Below 1 Hz a single oscillator period outlasts a render chunk (chunks split
+// long tones on zero-phase points).
+const MIN_FREQUENCY = 1;
 const SYMBOL_DEFAULTS = { dash: '-', dot: '.', space: '/', separator: ' ', invalid: '#' } as const;
 
 const isPositiveNumber = (value: unknown): value is number =>
@@ -16,16 +20,7 @@ const isCharacterKey = (symbol: string): boolean =>
 
 // A symbol is "code-like" if it can be tokenized entirely into dot/dash, which
 // would make it indistinguishable from a real character code.
-const isCodeLike = (symbol: string, dot: string, dash: string): boolean => {
-  if (symbol === '') return false;
-  let i = 0;
-  while (i < symbol.length) {
-    if (symbol.startsWith(dot, i)) i += dot.length;
-    else if (symbol.startsWith(dash, i)) i += dash.length;
-    else return false;
-  }
-  return true;
-};
+const isCodeLike = (symbol: string, dot: string, dash: string): boolean => symbol !== '' && scanCode(symbol, dot, dash);
 
 export function assertString(value: unknown, name: string): asserts value is string {
   if (typeof value !== 'string') {
@@ -111,14 +106,17 @@ const validateSymbols = (o: Options): void => {
 
 const getOptions = (input?: MorseOptions | null): Options => {
   const opts: MorseOptions = input ?? {};
-  // unit/fwUnit/wpm/frequency must be positive finite; zero, negative, NaN and
-  // Infinity are degenerate (they produce empty/negative/infinite buffers or
-  // throw in real browsers).
+  // unit/fwUnit/wpm must be positive finite; zero, negative, NaN and Infinity
+  // are degenerate (they produce empty/negative/infinite buffers or throw in
+  // real browsers). frequency must also be in [1, 22050) Hz (see above).
   const unit = isPositiveNumber(opts.unit) ? opts.unit : 0.08;
   const fwUnit = isPositiveNumber(opts.fwUnit) ? opts.fwUnit : unit;
   const wpm = isPositiveNumber(opts.wpm) ? opts.wpm : undefined;
   const requestedFrequency = opts.oscillator?.frequency;
-  const frequency = isPositiveNumber(requestedFrequency) && requestedFrequency <= MAX_FREQUENCY ? requestedFrequency : 500;
+  const frequency =
+    isPositiveNumber(requestedFrequency) && requestedFrequency >= MIN_FREQUENCY && requestedFrequency < NYQUIST_FREQUENCY
+      ? requestedFrequency
+      : 500;
   // volume is 0-100 (clamped); 0 is a legitimate value (mute), only
   // non-finite/missing fall back.
   const volume = typeof opts.volume === 'number' && Number.isFinite(opts.volume) ? Math.min(100, Math.max(0, opts.volume)) : 100;

@@ -16,3 +16,25 @@ export const tokenize = (morse: string, o: Options): string[] => {
   }
   return tokens;
 };
+
+// Reads a code as dot/dash symbols, calling onSymbol(isDash) for each one; a
+// character that starts neither symbol is skipped. Returns whether every
+// character belonged to a symbol. Shared by option validation and the audio
+// scheduler, so both read codes the same way.
+export const scanCode = (code: string, dot: string, dash: string, onSymbol?: (isDash: boolean) => void): boolean => {
+  // Longer symbol first. (Validation rejects a dot/dash that is a prefix of the
+  // other, so the order only matters for speed.)
+  const [first, second] = dot.length >= dash.length ? [dot, dash] : [dash, dot];
+  let complete = true;
+  for (let position = 0; position < code.length; ) {
+    const symbol = code.startsWith(first, position) ? first : code.startsWith(second, position) ? second : null;
+    if (symbol === null) {
+      complete = false;
+      position += 1;
+      continue;
+    }
+    onSymbol?.(symbol === dash);
+    position += symbol.length;
+  }
+  return complete;
+};

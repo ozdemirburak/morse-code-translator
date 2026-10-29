@@ -1,5 +1,5 @@
 import type { Options, AudioResult, AudioState, AudioEvents } from './types.js';
-import { tokenize } from './tokenize.js';
+import { tokenize, scanCode } from './tokenize.js';
 
 // Audio constants
 const SAMPLE_RATE = 44100;
@@ -55,13 +55,6 @@ const getUnits = (opts: Options): [number, number] => {
 
 export const getToneSchedule = (morse: string, opts: Options): ToneSchedule => {
   const [unit, fwUnit] = getUnits(opts);
-  // Try the longer symbol first. (Validation already rejects a dot/dash that is
-  // a prefix of the other, so the order only matters for speed.)
-  const symbolOrder: Array<[string, number]> =
-    opts.dot.length >= opts.dash.length
-      ? [[opts.dot, DOT_DURATION], [opts.dash, DASH_DURATION]]
-      : [[opts.dash, DASH_DURATION], [opts.dot, DOT_DURATION]];
-
   const tones: number[] = [];
   let time = 0;
   let wordGapPending = false;
@@ -76,16 +69,8 @@ export const getToneSchedule = (morse: string, opts: Options): ToneSchedule => {
       continue;
     }
     const durations: number[] = [];
-    for (let position = 0; position < token.length; ) {
-      const matched = symbolOrder.find(([symbol]) => token.startsWith(symbol, position));
-      if (matched) {
-        durations.push(matched[1]);
-        position += matched[0].length;
-      } else {
-        // Skip any unexpected symbol (e.g. the invalid-character marker).
-        position += 1;
-      }
-    }
+    // Any unexpected symbol (e.g. the invalid-character marker) is skipped.
+    scanCode(token, opts.dot, opts.dash, (isDash) => durations.push(isDash ? DASH_DURATION : DOT_DURATION));
     // A token without tones (e.g. the invalid marker) adds no gaps either.
     if (durations.length === 0) {
       continue;
@@ -107,6 +92,19 @@ export const getToneSchedule = (morse: string, opts: Options): ToneSchedule => {
     throw new RangeError('morse-code-translator: audio duration is not finite; use a smaller unit/fwUnit.');
   }
   return { tones: Float64Array.from(tones), totalTime: time };
+};
+
+// First tone whose end is not `endsBy` the given point (tone count if none).
+// Tones are sorted and never overlap, so their ends are sorted too.
+export const firstToneEndingAfter = (tones: Float64Array, endsBy: (end: number) => boolean): number => {
+  let low = 0;
+  let high = tones.length / 2;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (endsBy(tones[mid * 2] + tones[mid * 2 + 1])) low = mid + 1;
+    else high = mid;
+  }
+  return low;
 };
 
 /**
@@ -146,26 +144,21 @@ export const createChunkPlan = (
   const startFrame = (i: number) => Math.floor(tones[i * 2] * sampleRate);
   const endFrame = (i: number) => Math.ceil((tones[i * 2] + tones[i * 2 + 1]) * sampleRate);
   const guard = Math.ceil(sampleRate / frequency) + 1;
+  // A chunk is never shorter than one oscillator period, so a zero-phase split
+  // point always lands before the next target (several targets rounding to one
+  // point would make startFor() return a later chunk).
+  const chunkFrames = Math.max(targetFrames, guard);
 
   // First tone whose end frame is after `frame` (count if none).
-  const firstToneEndingAfter = (frame: number): number => {
-    let low = 0;
-    let high = count;
-    while (low < high) {
-      const mid = (low + high) >> 1;
-      if (endFrame(mid) <= frame) low = mid + 1;
-      else high = mid;
-    }
-    return low;
-  };
+  const firstEndingAfter = (frame: number): number => firstToneEndingAfter(tones, (end) => Math.ceil(end * sampleRate) <= frame);
 
   const boundaryAt = (k: number): number => {
-    const target = k * targetFrames;
+    const target = k * chunkFrames;
     if (k === 0 || target >= totalFrames) {
       return Math.min(target, totalFrames);
     }
-    const limit = target + targetFrames;
-    for (let tone = firstToneEndingAfter(target); tone <= count; tone++) {
+    const limit = target + chunkFrames;
+    for (let tone = firstEndingAfter(target); tone <= count; tone++) {
       // The gap before `tone` (the tail after the last tone has no next tone).
       const candidate = tone === 0 ? target : Math.max(target, endFrame(tone - 1));
       if (candidate >= limit || candidate >= totalFrames) {
@@ -185,11 +178,11 @@ export const createChunkPlan = (
 
   return {
     startFor: (frame) => {
-      const k = Math.floor(frame / targetFrames);
+      const k = Math.floor(frame / chunkFrames);
       const start = boundaryAt(k);
       return start <= frame ? start : boundaryAt(k - 1);
     },
-    next: (start) => boundaryAt(Math.floor(start / targetFrames) + 1),
+    next: (start) => boundaryAt(Math.floor(start / chunkFrames) + 1),
   };
 };
 
@@ -252,13 +245,7 @@ export const renderFrames = (
   };
 
   // First tone that ends after the chunk start.
-  let first = 0;
-  for (let low = 0, high = tones.length / 2; low < high; ) {
-    const mid = (low + high) >> 1;
-    if (tones[mid * 2] + tones[mid * 2 + 1] <= offset) low = mid + 1;
-    else high = mid;
-    first = low;
-  }
+  const first = firstToneEndingAfter(tones, (end) => end <= offset);
 
   const gain = gainNode.gain;
   let initial = 0;
@@ -410,6 +397,8 @@ const audio = (morse: string, options: Options): AudioResult => {
     promise: Promise<AudioBuffer>;
     resolve: (buffer: AudioBuffer) => void;
     reject: (error: unknown) => void;
+    // A WAV export render (playback renders queue ahead of these).
+    background: boolean;
   };
   const queued: RenderJob[] = [];
   const jobs = new Map<number, RenderJob>();
@@ -450,13 +439,17 @@ const audio = (morse: string, options: Options): AudioResult => {
   };
 
   // Queues a render in the pool (playback and WAV export share its slots).
-  const enqueue = (start: number, wanted: () => boolean): RenderJob => {
-    const job = { start, wanted: [wanted] } as RenderJob;
+  const enqueue = (start: number, wanted: () => boolean, background = false): RenderJob => {
+    const job = { start, wanted: [wanted], background } as RenderJob;
     job.promise = new Promise<AudioBuffer>((resolve, reject) => {
       job.resolve = resolve;
       job.reject = reject;
     });
-    queued.push(job);
+    // Playback renders go ahead of queued export renders, so playback never
+    // waits behind a whole export.
+    const at = background ? -1 : queued.findIndex((queuedJob) => queuedJob.background);
+    if (at < 0) queued.push(job);
+    else queued.splice(at, 0, job);
     return job;
   };
 
@@ -484,27 +477,20 @@ const audio = (morse: string, options: Options): AudioResult => {
     return buffer;
   };
 
-  // Resolves once the first chunk is rendered. A failed render is forgotten so
-  // the next play()/getWaveBlob() renders again instead of failing forever.
-  let ready: Promise<void> | null = null;
-  const whenReady = (): Promise<void> => {
-    ready ??= getChunk(0).then(
-      () => {
-        // Do not signal readiness if disposed meanwhile, and do NOT reset state to
-        // 'ready' (the caller may have already stopped/started during rendering).
-        if (state !== 'disposed') {
-          safeCall(events.onready);
-        }
-      },
-      (err) => {
-        ready = null;
-        throw err;
-      }
-    );
-    return ready;
+  // onready fires once, when a first chunk has rendered: the eager chunk-0
+  // render, or (if that failed) the first chunk a play()/export rendered.
+  let readyFired = false;
+  const markReady = () => {
+    // Never after dispose; and do NOT reset state to 'ready' (the caller may
+    // have already stopped/started during rendering).
+    if (!readyFired && state !== 'disposed') {
+      readyFired = true;
+      safeCall(events.onready);
+    }
   };
-  // Render eagerly; a failure surfaces from the next play()/getWaveBlob().
-  whenReady().catch(() => {});
+  // Render eagerly; a failure surfaces from the next play()/getWaveBlob(),
+  // which render their own chunks.
+  getChunk(0).then(markReady, () => {});
 
   // Fades the current run out and stops its sources once silent. Returns
   // whether there was a run to fade.
@@ -650,20 +636,19 @@ const audio = (morse: string, options: Options): AudioResult => {
       // one fails, play the current chunk and let scheduleAhead() try again.
       const following =
         next < totalFrames && next / SAMPLE_RATE - position < PREFETCH_SECONDS ? getChunk(next, current).catch(() => null) : null;
-      // Combined (and given a handler) at once: the renders may reject while
-      // whenReady() is still awaited, which would count as unhandled.
+      // Combined (and given a handler) at once, so a render that rejects while
+      // the other is still awaited never counts as unhandled.
       const renders = Promise.all([playing, following]);
       renders.catch(() => {});
       let rendered: [AudioBuffer, AudioBuffer | null];
       try {
         rendered = await renders;
-        // Bail if superseded during the render await (before whenReady(), so a
-        // disposed instance never starts another render).
+        // Bail if superseded during the render await.
         if (!current()) return;
-        // onready (first chunk) fires before onstarted, also when the eager
-        // render failed and was retried; a failure here is the playing chunk's
-        // render to report, not this one.
-        await whenReady().catch(() => {});
+        // A chunk has rendered, so onready fires (once) before onstarted, also
+        // when the eager chunk-0 render failed; play() never waits for chunk 0.
+        markReady();
+        // onready may pause, stop, seek, play again or dispose.
         if (!current()) return;
         if (resuming) {
           await resuming;
@@ -854,28 +839,54 @@ const audio = (morse: string, options: Options): AudioResult => {
   };
 
   const exportWav = async (): Promise<Blob> => {
-    await whenReady();
-    if (state === 'disposed') {
-      throw new Error('Audio buffer not available');
-    }
     const dataSize = totalFrames * (BITS_PER_SAMPLE / 8) * CHANNELS;
     if (dataSize > MAX_WAV_DATA_BYTES) {
       throw new RangeError('morse-code-translator: audio is too long for a WAV file (about 13.5 hours at most).');
     }
-    // Header plus one PCM part per chunk: the Blob never needs one contiguous
-    // copy of the whole recording, and each rendered chunk can be released.
-    const parts: ArrayBuffer[] = [encodeWAVHeader(SAMPLE_RATE, dataSize)];
-    for (let start = 0; start < totalFrames; start = plan.next(start)) {
-      // Reuse a playback render when there is one (if playback abandons it
-      // meanwhile, render the chunk here); export renders are not cached.
+    const unavailable = () => new Error('Audio buffer not available');
+    // A function, so the check is not narrowed away after a callback ran.
+    const disposed = () => state === 'disposed';
+    let failed = false;
+    // A chunk's samples: a playback render when there is one (rendered here if
+    // it fails or playback abandons it); export renders are not cached.
+    const load = (start: number): Promise<AudioBuffer> => {
       const render = () => {
-        const job = enqueue(start, () => state !== 'disposed');
+        const job = enqueue(start, () => !disposed() && !failed, true);
         pump();
         return job.promise;
       };
       const cached = chunks.get(start);
-      const buffer = await (cached ? cached.catch((err) => (err === CANCELLED ? render() : Promise.reject(err))) : render());
-      parts.push(floatTo16BitPCM(buffer.getChannelData(0)));
+      return cached ? cached.catch(() => (disposed() ? Promise.reject(CANCELLED) : render())) : render();
+    };
+    // Header plus one PCM part per chunk: the Blob never needs one contiguous
+    // copy of the whole recording, and each rendered chunk can be released.
+    const parts: ArrayBuffer[] = [encodeWAVHeader(SAMPLE_RATE, dataSize)];
+    // Two chunks in flight (the pool size); parts are written in order, so at
+    // most two rendered chunks are held at once.
+    const inFlight: Array<Promise<AudioBuffer>> = [];
+    let nextStart = 0;
+    const request = () => {
+      if (nextStart < totalFrames) {
+        const pending = load(nextStart);
+        pending.catch(() => {}); // awaited in order below; may reject earlier
+        inFlight.push(pending);
+        nextStart = plan.next(nextStart);
+      }
+    };
+    request();
+    request();
+    try {
+      while (inFlight.length > 0) {
+        const buffer = await (inFlight.shift() as Promise<AudioBuffer>);
+        if (disposed()) throw unavailable();
+        parts.push(floatTo16BitPCM(buffer.getChannelData(0)));
+        markReady(); // no-op after the first chunk
+        if (disposed()) throw unavailable(); // onready may dispose
+        request();
+      }
+    } catch (err) {
+      failed = true; // cancels this export's queued render
+      throw disposed() ? unavailable() : err;
     }
     return new Blob(parts, { type: 'audio/wav' });
   };

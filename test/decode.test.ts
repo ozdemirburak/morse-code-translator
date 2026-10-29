@@ -16,10 +16,10 @@ describe('decode tokenization', () => {
 });
 
 describe('characters()', () => {
-  it('does not expose the internal separator entry', () => {
-    expect(morse.characters()['1'][' ']).toBeUndefined();
-    expect(morse.characters({ separator: '|' })['1']['|']).toBeUndefined();
-    expect(Object.keys(morse.characters()['1'])).toEqual(Object.keys(baseCharacters['1']));
+  it('maps the separator to the word-gap symbol in set 1, like 7.x', () => {
+    expect(morse.characters()['1'][' ']).toBe('/');
+    expect(morse.characters({ separator: '|', space: '_' })['1']['|']).toBe('_');
+    expect(Object.keys(morse.characters()['1'])).toEqual([...Object.keys(baseCharacters['1']), ' ']);
   });
 });
 
