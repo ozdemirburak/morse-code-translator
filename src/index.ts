@@ -2,7 +2,7 @@ import { getEncodeCharacters, getMappedCharacters, swapCharacters } from './char
 import { tokenize } from './tokenize.js';
 import getOptions, { assertString } from './options.js';
 import getAudio from './audio.js';
-import { normalizeText } from './normalize.js';
+import { composeText, normalizeText, substitute } from './normalize.js';
 import type { MorseOptions, Options, Characters, AudioResult } from './types.js';
 
 // One visible character (an emoji with modifiers, a letter with marks) that has
@@ -23,6 +23,7 @@ function* clusters(text: string): Generator<string> {
 // Default-ignorable code points (ZWNJ/ZWJ, CGJ, direction marks, soft hyphen,
 // BOM, variation selectors, Hangul fillers) are invisible: they produce no output.
 const INVISIBLE = /^\p{Default_Ignorable_Code_Point}$/u;
+const COMBINING_MARK = /^[\u0300-\u036F]$/;
 // JavaScript's \s also matches U+FEFF, which Unicode does not count as whitespace.
 const WHITESPACE = /[^\S\uFEFF]+/g;
 
@@ -37,6 +38,17 @@ const encodeWith = (text: string, options: Options): string => {
     }
     return undefined;
   };
+  // The codes to send for a character: its own code, else the codes of the
+  // characters that stand in for it (its base letter, the standard
+  // punctuation). Empty if it, or one of them, has no code.
+  const codesFor = (character: string, previous: string): string[] => {
+    const code = lookup(character);
+    if (code !== undefined) {
+      return [code];
+    }
+    const found = [...substitute(character, previous)].map(lookup);
+    return found.every((part): part is string => part !== undefined) ? found : [];
+  };
 
   const codes: string[] = [];
   const push = (code: string) => {
@@ -47,6 +59,13 @@ const encodeWith = (text: string, options: Options): string => {
     }
     codes.push(code);
   };
+  // The last character that was sent, as a code or as the invalid marker ('' at
+  // the start): % is joined to it when it is a digit, and a mark belongs to it.
+  let previous = '';
+  // A combining diacritical mark that NFC could not join to the character
+  // before it is not sent (x + U+0301 is sent as X). No table key has such a mark.
+  const belongsToPrevious = (character: string): boolean =>
+    COMBINING_MARK.test(character) && previous !== '' && previous !== options.separator;
   // Normalize BEFORE the separator goes in, so it can never combine with the
   // text (NFC) or change case; trim first so boundary whitespace cannot turn
   // into a separator.
@@ -54,13 +73,16 @@ const encodeWith = (text: string, options: Options): string => {
     let unknown = false;
     for (const character of segment) {
       // Whitespace became the separator above; it encodes as a word gap.
-      const code = character === options.separator ? options.space : lookup(character);
-      if (code !== undefined) {
-        push(code);
+      const found = character === options.separator ? [options.space] : codesFor(character, previous);
+      if (found.length > 0) {
+        found.forEach((code) => push(code));
         unknown = false;
-      } else if (!INVISIBLE.test(character)) {
+        previous = character;
+      } else if (!INVISIBLE.test(character) && !belongsToPrevious(character)) {
         if (!unknown) push(options.invalid);
         unknown = true;
+        // A dropped unknown character (invalid: '') was not sent.
+        if (options.invalid !== '') previous = character;
       }
     }
   }
@@ -79,10 +101,16 @@ export const decode = (morse: string, opts?: MorseOptions | null): string => {
   assertString(morse, 'morse');
   const options = getOptions(opts);
   const swapped = swapCharacters(options);
-  return tokenize(morse, options)
+  // The decoded text between unknown codes. Each run is composed by itself, so
+  // an unknown code ends a syllable and the invalid marker is never composed.
+  const runs = [''];
+  for (const token of tokenize(morse, options)) {
     // swapped has a null prototype, so a "constructor" token cannot resolve.
-    .map((token) => swapped[token] ?? options.invalid)
-    .join('');
+    const character = swapped[token];
+    if (character === undefined) runs.push('');
+    else runs[runs.length - 1] += character;
+  }
+  return (options.compose ? runs.map(composeText) : runs).join(options.invalid);
 };
 
 export const characters = (options?: MorseOptions | null, usePriority: boolean = false): Characters => {

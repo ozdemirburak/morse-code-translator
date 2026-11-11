@@ -1,6 +1,7 @@
 import type { MorseOptions, Options } from './types.js';
 import { baseCharacters } from './characters.js';
 import { scanCode } from './tokenize.js';
+import { normalizeText } from './normalize.js';
 
 // Nyquist frequency of the 44.1 kHz render; at or above it the oscillator
 // renders only zero samples (it starts at a zero-phase point).
@@ -44,6 +45,15 @@ const getSymbol = (opts: MorseOptions, name: keyof typeof SYMBOL_DEFAULTS): stri
 const getPriority = (value: unknown): number => {
   const priority = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
   return Number.isInteger(priority) && (priority as number) >= 1 && (priority as number) <= 12 ? (priority as number) : 1;
+};
+
+// prefer is folded like text, so 'ö' and a decomposed 'Ö' both name the key Ö.
+const getPrefer = (value: unknown): string => {
+  if (value === undefined || value === null) {
+    return '';
+  }
+  assertString(value, '"prefer"');
+  return normalizeText(value);
 };
 
 const validateSymbols = (o: Options): void => {
@@ -136,6 +146,8 @@ const getOptions = (input?: MorseOptions | null): Options => {
     separator: getSymbol(opts, 'separator'),
     invalid: getSymbol(opts, 'invalid'), // '' is legitimate: drop unknown characters
     priority,
+    prefer: getPrefer(opts.prefer), // letters decode() gives for a code that several letters of a set share
+    compose: opts.compose !== false, // decode() joins jamo into syllables and kana with their voiced marks
     wpm, // words per minute - PARIS method used in favour of unit/fwUnit options
     unit, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
     fwUnit, // Farnsworth unit to control intercharacter and interword gaps

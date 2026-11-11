@@ -6,7 +6,8 @@ import getOptions from '../../src/options';
 describe('regression: word gaps', () => {
   it('keeps one word gap around a dropped unknown word', () => {
     expect(morse.encode('I ❤ YOU', { invalid: '' })).toBe('.. / -.-- --- ..-');
-    expect(morse.decode(morse.encode('PRICE 5 % OFF', { invalid: '' }))).toBe('PRICE 5 OFF');
+    // (% was the unknown character here until 8.1.0 sent it as 0/0.)
+    expect(morse.decode(morse.encode('PRICE 5 € OFF', { invalid: '' }))).toBe('PRICE 5 OFF');
   });
 
   it('turns a run of whitespace and separator characters into one gap', () => {

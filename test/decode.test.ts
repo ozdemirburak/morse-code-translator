@@ -45,7 +45,9 @@ describe('round trip fuzz', () => {
           .replace(/\s+/g, ' ')
           .trim();
         if (text === '') continue;
-        const options = { priority };
+        // compose: false, because the keys of the Japanese and Korean sets are
+        // the parts (kana + mark, jamo) that decode() joins by default.
+        const options = { priority, compose: false };
         // NFC may reorder adjacent combining marks (Thai); the result is canonically equivalent.
         expect(morse.decode(morse.encode(text, options), options), `priority ${priority}: ${text}`).toBe(text.normalize('NFC'));
       }

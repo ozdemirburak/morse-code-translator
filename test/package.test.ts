@@ -94,4 +94,27 @@ describe('package contract', () => {
   it('ships declarations that reference the DOM lib', () => {
     expect(readFileSync(built('dist/types.d.ts'), 'utf8')).toMatch(/^\/\/\/ <reference lib="dom" preserve="true" \/>/);
   });
+
+  // Sites that use the library support browsers from Safari 15, Chrome 89 and
+  // Firefox 89. Their bundler lowers syntax, but it rewrites neither a regular
+  // expression nor a missing runtime API: the RegExp lookbehind of 8.0.x
+  // (Safari 16.4) stopped the whole file from loading in an older browser.
+  it.each([pkg.exports['.'].default, pkg.unpkg])('%s has no RegExp or runtime feature newer than its browser baseline', (path) => {
+    const source = readFileSync(built(path), 'utf8');
+    expect(source.includes('(?<='), 'RegExp lookbehind').toBe(false);
+    expect(source.includes('(?<!'), 'RegExp negative lookbehind').toBe(false);
+    // The flags of each RegExp literal. A literal cannot follow a value (that
+    // is a division), and there is no dynamic RegExp that the scan cannot see.
+    const literal = /(?<![\w$)\]])\/(?![*/])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n[])+\/([dgimsuvy]*)(?![\w$])/g;
+    const flags = [...source.matchAll(literal)].map(([, found]) => found);
+    expect(flags.length).toBeGreaterThanOrEqual(10);
+    expect(flags.filter((found) => found.includes('v')), 'RegExp v flag').toEqual([]);
+    expect(source.includes('RegExp('), 'dynamic RegExp').toBe(false);
+    for (const api of [
+      '.at(', 'Object.hasOwn(', 'structuredClone(', '.findLast(', '.findLastIndex(', 'withResolvers', '.toSorted(',
+      '.toReversed(', '.toSpliced(', 'Array.fromAsync', '.groupBy(', '.isWellFormed(', '.toWellFormed(',
+    ]) {
+      expect(source.includes(api), api).toBe(false);
+    }
+  });
 });

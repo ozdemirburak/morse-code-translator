@@ -19,6 +19,16 @@ export interface Options {
   separator: string;
   invalid: string;
   priority: number;
+  /**
+   * Letters that decode() gives for a code that several letters of one character set share, for example
+   * 'ĄĆĘŁŃÓŚŹŻ' for Polish text ('.-..-' is then Ł, not È). The first of two letters with the same code wins.
+   */
+  prefer: string;
+  /**
+   * decode() joins Hangul jamo into syllables (ㅎㅏㄴ gives 한) and a kana with ゛ or ゜ into one kana (カ゛ gives ガ).
+   * Default true; false gives one character for each code.
+   */
+  compose: boolean;
   wpm?: number;
   unit: number;
   fwUnit: number;

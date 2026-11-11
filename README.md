@@ -29,6 +29,9 @@ the CommonJS form `import morse = require(...)` in `.cts` files needs TypeScript
 <script>MorseCodeTranslator.encode('SOS');</script>
 ```
 
+The library uses no RegExp lookbehind and no runtime API newer than Safari 15, Chrome 89 and Firefox 89, so a
+bundle that is built for those browsers loads in them.
+
 ## Usage
 
 ```js
@@ -93,6 +96,9 @@ const cyrillic = morse.encode('Ленинград', { priority: 5 }); // .-.. . 
 const greek = morse.decode('... .- --. .- .--. .--', { priority: 6 }); // ΣΑΓΑΠΩ
 const hebrew = morse.decode('.. ––– . –––', { dash: '–', dot: '.', priority: 7 }); // יהוה
 const japanese = morse.encode('NEWS', { priority: 10, dash: '－', dot: '・', separator: '　' }); // －・　・　・－－　・・・
+const korean = morse.decode('.--- . ..-. .-.. .... .-..', { priority: 11 }); // 한국
+const turkish = morse.decode('--. ---. .-.. ..--', { prefer: 'İÖ' }); // GÖLÜ (GÓLÜ without prefer)
+const polish = morse.decode('.-..- ---. -.. --..-.', { prefer: 'ĄĆĘŁŃÓŚŹŻ' }); // ŁÓDŹ (ÈÓDŹ without prefer)
 const characters = morse.characters({ dash: '–', dot: '•' }); // {'1': {'A': '•–', ...}, ..., '11': {'ㄱ': '•–••', ...}, ...}
 const arabicAudio = morse.audio('البراق', { // generates the Morse .- .-.. -... .-. .- --.- then generates the audio from it
   wpm: 18, // sets the wpm based on the Paris method, note that setting this will override and set the unit and fwUnits accordingly
@@ -133,6 +139,8 @@ arabicAudio.stop();       // will stop and reset to beginning
 | `space` | `'/'` | Word gap. A single, non-whitespace character that differs from `separator`, `dot` and `dash`. |
 | `invalid` | `'#'` | Output for unknown characters; `''` drops them. Must not consist only of `dot`/`dash` symbols, or contain whitespace, `space` or `separator`. |
 | `priority` | `1` | Character set to search first (1-12, number or numeric string). |
+| `prefer` | `''` | Letters that `decode()` gives for a code that several letters of one character set share, such as `'ĄĆĘŁŃÓŚŹŻ'`. See Shared codes. |
+| `compose` | `true` | `decode()` joins Hangul jamo into syllables and a kana with ゛ or ゜ into one kana; `false` gives one character for each code. |
 | `unit` | `0.08` | Length of one unit in seconds (15 wpm). |
 | `fwUnit` | `unit` | Farnsworth unit for the gaps between characters and words. |
 | `wpm` | – | Words per minute (PARIS); overrides `unit` and `fwUnit`. |
@@ -142,7 +150,28 @@ arabicAudio.stop();       // will stop and reset to beginning
 | `events` | – | `onready`, `onstarted`, `onpaused`, `onstopped`, `onended`, `onseeked(time)`. |
 
 Invalid symbol options throw an error (they would corrupt the output); invalid numeric options fall back
-to their default. Text and symbol options must be strings (`TypeError` otherwise).
+to their default. Text, symbol options and `prefer` must be strings (`TypeError` otherwise).
+
+### Shared codes
+
+Many letters of the Latin Extended set share a code, and `decode()` gives the first one of the table: `É` for
+`..-..` (also Ę, Ë, Đ), `È` for `.-..-` (also İ, Ł), `Ä` for `.-.-` (also Ą, Æ), `Ç` for `-.-..` (also Ć, Ĉ),
+`Ó` for `---.` (also Ò, Ö, Ô, Ø), `Ń` for `--.--` (also Ñ), `Ã` for `.--.-` (also Á, Å, À, Â), `Ü` for `..--`
+(also Ù, Ŭ, Û), `Ž` for `--..-` (also Ż), `Ĥ` for `----` (also Ș, Š), `Ş` for `.--..` (also Þ), `Ğ` for `--.-.`
+(also Ĝ) and `Ì` for `.---.` (also Ĵ). Give the letters of the language in `prefer` to get them instead:
+
+```js
+morse.decode('--.-- ---.');                    // ŃÓ
+morse.decode('--.-- ---.', { prefer: 'ÑÖ' });  // ÑÖ
+morse.decode('..-..', { priority: 5, prefer: 'Є' }); // Є (Э without prefer)
+```
+
+`prefer` takes lower case letters too, ignores characters that have no code, and gives the first of two
+preferred letters that share a code. It chooses between the letters of one character set only; `priority`
+chooses the set. So `Ê` (`-..-.`, the code of `/`) and `Č` (`-.--.`, the code of `(`) need `priority: 4`.
+`prefer` works in the same way for the other sets (Ukrainian Є, Thai ศ ษ, Hebrew final forms). A preferred
+letter takes every occurrence of its code: with `prefer: 'І'` each Cyrillic `..` is І, also where И was sent.
+It does not change `encode()` or `characters()`.
 
 ### Writing systems
 
@@ -153,16 +182,38 @@ Text is folded to the forms Morse operators send before it is encoded:
 - Greek tonos is not transmitted (ή → Η); Russian Ё is sent as Е; Hebrew final forms as their base letters; ẞ as SS.
 - Thai letters that share a sound share a code (ศ ษ ส).
 - Hebrew points and cantillation, Arabic vowel marks, a leftover hamza or madda mark (such as the Persian
-  ezafe on ه) and the tatweel are not transmitted; letters such as أ that contain a hamza stay as they are.
-  Arabic-Indic, Persian and Thai digits are sent as digits (٣ → 3).
+  ezafe on ه) and the tatweel are not transmitted. Arabic-Indic, Persian and Thai digits are sent as digits (٣ → 3).
 - Full-width Latin letters and digits are sent as ASCII (ＳＯＳ → SOS); Thai ํ + า is sent as ำ; Arabic ؟ ، ؛
   and the Hebrew maqaf ־ are sent as ? , ; and -.
+- A letter that has no code is sent as its base letter, as operators do: ř → R, ő → O, ạ → A, í → I, œ → OE,
+  ĳ → IJ, and a combining diacritical mark (U+0300 to U+036F) that is not part of a letter is dropped after
+  a character (x́ → X). Arabic letters with a hamza
+  or madda are sent as the bare letter (أ إ آ → ا, ؤ → و, ئ → ي), ة ۀ ھ as ه and ى as ي. Letters that have a
+  code of their own (é, ñ, ü, ç and the others of set 4) keep it.
+- The punctuation that phones and word processors write is sent as the standard punctuation (ITU-R M.1677-1
+  has one signal for the "hyphen or dash or subtraction sign"): ‘ ’ ‚ ‹ › ´ ʼ and the backtick as an
+  apostrophe, “ ” „ « » as a quotation mark, ‐ ‑ ‒ – — ― − as a hyphen and … as three full stops. The Hebrew
+  geresh ׳ and gershayim ״ are sent as an apostrophe and a quotation mark.
+- Signs that ITU-R M.1677-1 sends with other signals: × is sent as X, % and ‰ as 0/0 and 0/00 with a hyphen
+  after a number (2% → 2-0/0), the minute and second signs ′ ″ as one and two apostrophes. Currency signs
+  such as € have no rule and stay unknown (write EUR).
 - Invisible characters (Unicode default-ignorable code points: zero-width joiners, direction marks, soft
   hyphens, the BOM, variation selectors, Hangul fillers) are ignored. An unknown visible character, such
   as an emoji, gives one `invalid` marker (one per code point in engines without `Intl.Segmenter`).
 - A run of whitespace gives one word gap.
 
-Decoding returns the base forms.
+Decoding returns the base forms, with two exceptions (`compose: false` turns them off):
+
+- Korean jamo are joined into syllables like an input method does: a consonant directly before a vowel starts
+  a new syllable, and the consonants before it are the final of the syllable before
+  (`decode(encode('한국어', { priority: 11 }), { priority: 11 })` → 한국어, 닭, 있습니다). Double consonants
+  were sent as two basic jamo, so the same two consonants between two vowels are read as a final and an
+  initial: 학교 comes back, but 아까 comes back as 악가 and 오빠 as 옵바. At the start of a syllable where
+  they cannot be a final they are joined (까지, 함께). Jamo that make no syllable stay as they are (ㅋㅋㅋ).
+- A Japanese kana and the mark after it are joined when Unicode has that kana (カ゛ → ガ, ハ゜ → パ, ウ゛ → ヴ).
+  Small kana and hiragana cannot be restored: がっこう comes back as ガツコウ.
+
+The joined text always encodes to the same Morse code again.
 
 ### Audio
 
@@ -175,6 +226,21 @@ creates and resumes the live `AudioContext` at once, inside the user gesture tha
 `dispose()` closes it after the stop fade. WAV export is limited by the format to about 13.5 hours, and it
 keeps the 16-bit samples in memory until the `Blob` is built (about 320 MB per hour of audio). In Node.js
 or during server-side rendering `audio()` throws, because there is no Web Audio API.
+
+## Upgrading from 8.0
+
+- `decode()` joins Hangul jamo into syllables (priority 11) and a kana with ゛ or ゜ into one kana
+  (priority 10). `compose: false` gives the 8.0 result (one character for each code).
+- Characters that encoded as `#` now encode: letters without a code as their base letter (ř, ő, ạ, í, œ, أ,
+  ة …), typographic punctuation (’ “ ” – — …), and × % ‰ ′ ″ (see Writing systems). A combining
+  diacritical mark (U+0300 to U+036F) after a character gives no `#` any more.
+- `Č` has the code `-.--.` of its source (it had `--.`, the code of `G`): `encode('Č')` changes, and with
+  `priority: 4` `--.` decodes to `G` again and `-.--.` to `Č`.
+- Persian `ق` has the code `...---` (it had the mirror image `---...`, the code of `:`):
+  `encode('ق', { priority: 9 })` changes, and with `priority: 9` `---...` decodes to `:` again.
+- New table keys `Đ` (`..-..`) and `Û` (`..--`); `decode()` still gives `É` and `Ü` for these codes. They can
+  no longer be used as `separator`.
+- New options `prefer` and `compose`.
 
 ## Upgrading from 7.x
 

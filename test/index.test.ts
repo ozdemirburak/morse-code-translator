@@ -26,7 +26,7 @@ describe('morse', () => {
   });
   it('encodes non-english alphabet', () => {
     expect(morse.encode('ÃÁÅÀÂÄ')).toBe('.--.- .--.- .--.- .--.- .--.- .-.-');
-    expect(morse.encode('ĄÆÇĆĈČ')).toBe('.-.- .-.- -.-.. -.-.. -.-.. --.');
+    expect(morse.encode('ĄÆÇĆĈČ')).toBe('.-.- .-.- -.-.. -.-.. -.-.. -.--.');
     expect(morse.encode('ĘÐÈËĘÉ')).toBe('..-.. ..--. .-..- ..-.. ..-.. ..-..');
     expect(morse.encode('ÊĞĜĤİÏ')).toBe('-..-. --.-. --.-. ---- .-..- -..--');
     expect(morse.encode('ÌĴŁŃÑÓ')).toBe('.---. .---. .-..- --.-- --.-- ---.');
@@ -37,7 +37,7 @@ describe('morse', () => {
   it('decodes non-english alphabet', () => {
     const options = { priority: 4 };
     expect(morse.decode('.--.- .--.- .--.- .--.- .--.- .-.-', options)).toBe('ÃÃÃÃÃÄ');
-    expect(morse.decode('.-.- .-.- -.-.. -.-.. -.-.. --.', options)).toBe('ÄÄÇÇÇČ');
+    expect(morse.decode('.-.- .-.- -.-.. -.-.. -.-.. -.--.', options)).toBe('ÄÄÇÇÇČ');
     expect(morse.decode('..-.. ..--. .-..- ..-.. ..-.. ..-..', options)).toBe('ÉÐÈÉÉÉ'); // ITU-R M.1677-1: ..-.. is é
     expect(morse.decode('-..-. --.-. --.-. ---- .-..- -..--', options)).toBe('ÊĞĞĤÈÏ');
     expect(morse.decode('.---. .---. .-..- --.-- --.-- ---.', options)).toBe('ÌÌÈŃŃÓ');
@@ -108,7 +108,7 @@ describe('morse', () => {
     expect(morse.encode('ابپتثج', options)).toBe('.- -... .--. - -.-. .---');
     expect(morse.encode('چحخدذر', options)).toBe('---. .... -..- -.. ...- .-.');
     expect(morse.encode('زژسشصض', options)).toBe('--.. --. ... ---- .-.- ..-..');
-    expect(morse.encode('طظعغفق', options)).toBe('..- -.-- --- ..-- ..-. ---...');
+    expect(morse.encode('طظعغفق', options)).toBe('..- -.-- --- ..-- ..-. ...---');
     expect(morse.encode('کگلمنو', options)).toBe('-.- --.- .-.. -- -. .--');
     expect(morse.encode('هی', options)).toBe('. ..');
   });
@@ -117,7 +117,7 @@ describe('morse', () => {
     expect(morse.decode('.- -... .--. - -.-. .---', options)).toBe('ابپتثج');
     expect(morse.decode('---. .... -..- -.. ...- .-.', options)).toBe('چحخدذر');
     expect(morse.decode('--.. --. ... ---- .-.- ..-..', options)).toBe('زژسشصض');
-    expect(morse.decode('..- -.-- --- ..-- ..-. ---...', options)).toBe('طظعغفق');
+    expect(morse.decode('..- -.-- --- ..-- ..-. ...---', options)).toBe('طظعغفق');
     expect(morse.decode('. ..', options)).toBe('هی');
   });
   it('encodes japanese alphabet', () => {
@@ -134,7 +134,8 @@ describe('morse', () => {
     expect(morse.encode('（）', options)).toBe('－・－－・－　・－・・－・');
   });
   it('decodes japanese alphabet', () => {
-    const options = { priority: 10, dash: '－', dot: '・', separator: '　' };
+    // compose: false gives the table keys (the default joins ヲ゛ into ヺ).
+    const options = { priority: 10, dash: '－', dot: '・', separator: '　', compose: false };
     expect(morse.decode('－－・－－　・－・・　－・－・－　－・　・－・　－・・・', options)).toBe('アカサタナハ');
     expect(morse.decode('－・・－　・－－　・・・　－・－　・－　－・－・・', options)).toBe('マヤラワイキ');
     expect(morse.decode('－－・－・　・・－・　－・－・　－－・・－　・・－・－　－－・', options)).toBe('シチニヒミリ');
@@ -154,7 +155,8 @@ describe('morse', () => {
     expect(morse.encode('ㅗㅛㅜㅠㅡㅣ', options)).toBe('.- -. .... .-. -.. ..-');
   });
   it('decodes korean alphabet', () => {
-    const options = { priority: 11 };
+    // compose: false gives the table keys (the default joins ㅎㅏ into 하).
+    const options = { priority: 11, compose: false };
     expect(morse.decode('.-.. ..-. -... ...- -- .--', options)).toBe('ㄱㄴㄷㄹㅁㅂ');
     expect(morse.decode('--. -.- .--. -.-. -..- --..', options)).toBe('ㅅㅇㅈㅊㅋㅌ');
     expect(morse.decode('--- .--- . .. - ...', options)).toBe('ㅍㅎㅏㅑㅓㅕ');
@@ -365,8 +367,8 @@ describe('morse', () => {
     });
 
     it('drops unknown characters when invalid is empty (B7)', () => {
-      expect(morse.encode('×')).toBe('#');
-      expect(morse.encode('×', { invalid: '' })).toBe('');
+      expect(morse.encode('€')).toBe('#');
+      expect(morse.encode('€', { invalid: '' })).toBe('');
     });
 
     it('throws on colliding dot/dash/separator symbols (B9)', () => {

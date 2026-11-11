@@ -57,7 +57,8 @@ describe('regression: more script variants', () => {
     // Persian ezafe (heh + hamza above) and a mark that composes with nothing.
     expect(morse.encode('خانهٔ', { priority: 9 })).toBe(morse.encode('خانه', { priority: 9 }));
     expect(morse.encode('كٔ', { priority: 8 })).toBe('-.-');
-    // Alef with hamza is its own letter (precomposed by NFC); it has no code.
-    expect(morse.encode('أ', { priority: 8 })).toBe('#');
+    // Alef with hamza is its own letter (precomposed by NFC). It has no code;
+    // since 8.1.0 it is sent as its base letter (it gave '#' before).
+    expect(morse.encode('أ', { priority: 8 })).toBe('.-');
   });
 });

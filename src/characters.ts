@@ -20,13 +20,15 @@ const baseCharacters: Characters = {
   },
   '4': { // Latin Extended => https://ham.stackexchange.com/questions/1379/international-characters-in-morse-code
     'Ã': '01101', 'Á': '01101', 'Å': '01101', 'À': '01101', 'Â': '01101', 'Ä': '0101',
-    'Ą': '0101', 'Æ': '0101', 'Ç': '10100', 'Ć': '10100', 'Ĉ': '10100', 'Č': '110',
+    'Ą': '0101', 'Æ': '0101', 'Ç': '10100', 'Ć': '10100', 'Ĉ': '10100', 'Č': '10110',
     'Ð': '00110', 'È': '01001', 'É': '00100', 'Ę': '00100', 'Ë': '00100',
     'Ê': '10010', 'Ğ': '11010', 'Ĝ': '11010', 'Ĥ': '1111', 'İ': '01001', 'Ï': '10011',
     'Ì': '01110', 'Ĵ': '01110', 'Ł': '01001', 'Ń': '11011', 'Ñ': '11011', 'Ó': '1110',
     'Ò': '1110', 'Ö': '1110', 'Ô': '1110', 'Ø': '1110', 'Ś': '0001000', 'Ş': '01100',
     'Ș': '1111', 'Š': '1111', 'Ŝ': '00010', 'Þ': '01100', 'Ü': '0011',
-    'Ù': '0011', 'Ŭ': '0011', 'Ž': '11001', 'Ź': '110010', 'Ż': '11001'
+    'Ù': '0011', 'Ŭ': '0011', 'Ž': '11001', 'Ź': '110010', 'Ż': '11001',
+    // Also in the source above; appended, so decode() still gives É and Ü
+    'Đ': '00100', 'Û': '0011'
   },
   '5': { // Cyrillic Alphabet => https://en.wikipedia.org/wiki/Russian_Morse_code
     'А': '01', 'Б': '1000', 'В': '011', 'Г': '110', 'Д': '100', 'Е': '0',
@@ -60,10 +62,11 @@ const baseCharacters: Characters = {
     'ﺀ': '0' // isolated presentation form of ء, as listed on Wikipedia
   },
   '9': { // Persian Alphabet => https://en.wikipedia.org/wiki/Morse_code_for_non-Latin_alphabets
+    // ق is ...--- (a table that is printed right to left shows each code mirrored, ---...)
     'ا': '01', 'ب': '1000', 'پ': '0110', 'ت': '1', 'ث': '1010', 'ج': '0111',
     'چ': '1110', 'ح': '0000', 'خ': '1001', 'د': '100', 'ذ': '0001', 'ر': '010',
     'ز': '1100', 'ژ': '110', 'س': '000', 'ش': '1111', 'ص': '0101', 'ض': '00100',
-    'ط': '001', 'ظ': '1011', 'ع': '111', 'غ': '0011', 'ف': '0010', 'ق': '111000',
+    'ط': '001', 'ظ': '1011', 'ع': '111', 'غ': '0011', 'ف': '0010', 'ق': '000111',
     'ک': '101', 'گ': '1101', 'ل': '0100', 'م': '11', 'ن': '10', 'و': '011',
     'ه': '0', 'ی': '00'
   },
@@ -108,17 +111,18 @@ const baseCharacters: Characters = {
 type Tables = {
   // Every set with '0' = the priority set, codes already in dot/dash symbols.
   mapped: Characters;
-  // Morse code -> character, first key wins in set order ('0' first).
+  // Morse code -> character: the first set in order ('0' first) that has the
+  // code, and in that set a preferred letter, else the first key.
   swapped: Record<string, string>;
 };
 
 // encode()/decode() run per keystroke in typical UIs, so the derived tables are
-// cached per symbol/priority combination (bounded, oldest entry evicted first).
+// cached per symbol/priority/prefer combination (bounded, oldest entry evicted first).
 const CACHE_SIZE = 16;
 const cache = new Map<string, Tables>();
 
 const getTables = (options: Options): Tables => {
-  const key = JSON.stringify([options.dot, options.dash, options.space, options.priority]);
+  const key = JSON.stringify([options.dot, options.dash, options.space, options.priority, options.prefer]);
   const cached = cache.get(key);
   if (cached) {
     return cached;
@@ -137,6 +141,13 @@ const getTables = (options: Options): Tables => {
   // Object.prototype members (e.g. "constructor") during decoding.
   const swapped: Record<string, string> = Object.create(null);
   for (const set in mapped) {
+    // A preferred letter only wins over the other letters of its own set: Ö
+    // over Ó, but Ê never over the fraction bar of the earlier set 3.
+    for (const character of options.prefer) {
+      if (Object.prototype.hasOwnProperty.call(mapped[set], character)) {
+        swapped[mapped[set][character]] ??= character;
+      }
+    }
     for (const character in mapped[set]) {
       swapped[mapped[set][character]] ??= character;
     }
